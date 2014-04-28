@@ -89,4 +89,5 @@ except Exception:
     log.exception("couldn't authenticate with Twitter")
     sys.exit(4)
 
-#api.PostUpdate(tweet)
+if raw_input("tweet it? ").lower() == "y":
+    api.PostUpdate(tweet)
