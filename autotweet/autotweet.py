@@ -12,7 +12,8 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.WARNING)
 
-target_date = datetime.date.today() + datetime.timedelta(days=1)
+NDAYS = 1
+target_date = datetime.date.today() + datetime.timedelta(days=NDAYS)
 starget_date = target_date.strftime("%a %b") + " " + str(target_date.day)
 
 r = requests.get("http://www.%s/admin/" % baseurl, allow_redirects=True)
