@@ -1,4 +1,5 @@
 # Quick and dirty script to auto-tweet 
+import os
 import sys
 import StringIO
 import requests
@@ -90,5 +91,11 @@ except Exception:
     log.exception("couldn't authenticate with Twitter")
     sys.exit(4)
 
-if raw_input("tweet it? ").lower() == "y":
-    api.PostUpdate(tweet)
+if "-a" in sys.argv or (raw_input("tweet it? ").lower() == "y"):
+    try:
+        api.PostUpdate(tweet)
+    except Exception as e:
+        os.system("""echo "%s" | mail -s "autotweet FAILED" kevin.manley@gmail.com""" % str(e))
+    else:
+        os.system("""echo "%s" | mail -s "autotweet SUCCESS" kevin.manley@gmail.com""" % tweet)
+
