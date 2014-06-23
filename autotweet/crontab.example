@@ -1,0 +1,3 @@
+# m h  dom mon dow   command
+  59 11 * * * cd /root/code/JoyRideRidgefield/autotweet && python autotweet.py -a
+
