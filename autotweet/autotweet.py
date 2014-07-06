@@ -12,7 +12,7 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.WARNING)
 
-NDAYS = 1
+NDAYS = 1 
 target_date = datetime.date.today() + datetime.timedelta(days=NDAYS)
 starget_date = target_date.strftime("%a %b") + " " + str(target_date.day)
 
