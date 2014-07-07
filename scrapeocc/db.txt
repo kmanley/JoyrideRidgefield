@@ -1,0 +1,5 @@
+sqlite> create view v_occ as select *, unavail/total*100.0 as pct from occ;
+sqlite> create view v_occ as select *, 1.0*unavail/total*100.0 as pct from occ;
+sqlite> insert into occ values ("2014-07-07", "kev", 20, 100);
+sqlite> select * from v_occ;
+

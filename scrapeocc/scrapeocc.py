@@ -1,5 +1,6 @@
 # Quick and dirty hack to check occupancy for a site where we don't have admin
 import sys
+import sqlite3
 import StringIO
 import requests
 import logging
@@ -12,10 +13,15 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.WARNING)
 
+conn = sqlite3.connect("occupancy.db")
 SITENAMES = ["westport", "darien"]
 SITES = {"westport":"http://www.%s/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport" % baseurl,
 	 "darien":"http://www.%s/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien" % baseurl}
+CAPACITY = {"westport":44, "darien":40}
+TODAY = datetime.datetime.today()
 
+# TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
+# so we need to extract date/time/instructor here instead of in getOccupancy
 def getBookableLinks(site, cookies):
 	r = requests.get(SITES[site], headers=userAgent, cookies=cookies)
 	soup = BS(r.text)
@@ -26,7 +32,25 @@ def getBookableLinks(site, cookies):
 	    if link:
 		if link.span.text and link.span.text.lower().find("cycle")>-1:
   		    #print link.span.text, link.get("href")
-                    yield link.get("href")
+                    day = int(link.parent.parent["class"][3:])
+                    sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
+                    dateparts = sdate.split(".")
+                    month = int(dateparts[0])
+                    day = int(dateparts[1])
+       		    instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
+		    stime = block.find("span", attrs={"class":"scheduleTime active"}).text
+                    # 11:00 AM60min
+                    hour = int(stime.split(":")[0])
+                    minute = int(stime.split(" ")[0].split(":")[-1])
+                    if stime.split(" ")[1].startswith("PM") and hour < 12:
+                        hour += 12
+                    if block["class"].find("classfull") > -1:
+                        soldout = True
+                    else:
+                        soldout = False
+                    year = (TODAY + datetime.timedelta(days=day)).year
+                    dt = datetime.datetime(year, month, day, hour, minute, 0)
+                    yield dt, instr, soldout, link.get("href")
 	    else:
 		pass #print "no link"
 
@@ -34,6 +58,9 @@ def getOccupancy(url, cookies):
     r = requests.get("http://www.%s%s" % (baseurl, url), headers=userAgent, cookies=cookies)
     soup = BS(r.text)
     details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
+    if not details:
+        print "found sold out class %s" % url
+        return datetime.datetime(1900,1,1,0,0,0), "Unknown", 0, 0, 100
     ps = details.findAll("p")
     date = ps[0].text.strip()[len("Date:")+5:]
     dateparts = date.split("/")
@@ -77,91 +104,23 @@ r = requests.post("https://www.%s/reserve/index.cfm?action=" % baseurl, data=for
 #	<a href="/reserve/index.cfm?action=Reserve.chooseSpot&amp;classid=16601">
 #r = requests.get("http://www.%s/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien" % baseurl, cookies=cookies)
 
+curs = conn.cursor()
 tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-for sitename in SITENAMES[:1]:
+for sitename in SITENAMES:
     print sitename
-    for url in getBookableLinks(sitename, cookies):
-        #print url
-        dt, instr, unavail, total, occ = getOccupancy(url, cookies)
+    for item in getBookableLinks(sitename, cookies):
+        dt, instr, soldout, url = item
         if dt.date() > tomorrow:
             break   
+        if soldout:
+            unavail = total = CAPACITY[sitename]
+        else:
+            dt, instr, unavail, total, occ = getOccupancy(url, cookies)
         print str(dt), instr, "%d/%d" % (unavail,total), "%.1f%%" % occ
-	print "-" * 40
-        
+        curs.execute("insert or replace into occ values (?, ?, ?, ?)", (dt, instr, unavail, total))
+        conn.commit()
 
-#r = requests.get("http://www.%s/reserve/index.cfm?action=Reserve.chooseSpot&classid=16601" % baseurl, cookies=cookies)
+    print "-" * 40
 
-#print r.text.encode("utf-8")
 
-"""
-soup = BS(r.text)
-lis = soup.findAll("li", attrs={"class":"nav-header"})
-found = False
-for li in lis:
-    if li.text == starget_date:
-        found = True
-        break
-if not found:
-    log.warning("couldn't find target date %s" % starget_date)
-    sys.exit(1)
 
-classes = []
-sib = li.findNextSibling()
-while sib.text.count("-") == 2:
-    parts = sib.text.split(" - ")
-    if len(parts) != 3:
-        log.warning("didn't find expected 3 part class description: %s" % sib.text)
-        sys.exit(3)
-    parts[0] = datetime.datetime.strptime(parts[0], "%I:%M %p")
-    classes.append(parts)
-    sib = sib.findNextSibling()
-
-if not classes:
-    log.warning("no classes found")
-    sys.exit(2)
-
-def format_tweet(dt, classes, inc_url=True):
-    out = StringIO.StringIO()
-    sdate = dt.strftime("%a").upper() + " " + ("%d/%d" % (dt.month, dt.day))
-    out.write(sdate)
-    out.write(": ")
-    for i, (tm, instr, typ) in enumerate(classes):
-        if i > 0:
-            out.write(", ")
-        hour = tm.hour
-        if hour < 12:
-            ampm = "a"
-        else:
-            ampm = "p"
-            if hour > 12:
-                hour -= 12
-        if tm.minute:
-            minute = ":%02d" % tm.minute
-        else:
-            minute = ""
-        out.write(str(hour) + minute + ampm + " ")
-        out.write(instr)
-        if typ.lower() != "cycle":
-            out.write(" (%s)" % typ)
-    if inc_url:
-        out.write(" ")
-        out.write("%s/reserve" % baseurl)
-  
-    return out.getvalue()
-
-# TODO: verify length < 140
-tweet = format_tweet(target_date, classes)
-print tweet
-
-api = twitter.Api(consumer_key=ckey, consumer_secret=csec,
-                  access_token_key=akey, 
-                  access_token_secret=asec)
-try:
-    api.VerifyCredentials()
-except Exception:
-    log.exception("couldn't authenticate with Twitter")
-    sys.exit(4)
-
-if raw_input("tweet it? ").lower() == "y":
-    api.PostUpdate(tweet)
-"""
