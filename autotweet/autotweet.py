@@ -79,7 +79,7 @@ def format_tweet(dt, classes, inc_url=True):
     return out.getvalue()
 
 # TODO: verify length < 140
-tweet = format_tweet(target_date, classes)
+tweet = format_tweet(target_date, classes) 
 print tweet
 
 api = twitter.Api(consumer_key=ckey, consumer_secret=csec,
@@ -95,7 +95,7 @@ if "-a" in sys.argv or (raw_input("tweet it? ").lower() == "y"):
     try:
         api.PostUpdate(tweet)
     except Exception as e:
-        os.system("""echo "%s" | mail -s "autotweet FAILED" kevin.manley@gmail.com""" % str(e))
+        os.system("""echo "%s" | mail -s "autotweet FAILED" kevin.manley@gmail.com""" % (str(e)+" ("+tweet+")"))
     else:
         os.system("""echo "%s" | mail -s "autotweet SUCCESS" kevin.manley@gmail.com""" % tweet)
 
