@@ -1,4 +1,4 @@
-CREATE TABLE occ (dt datetime, site string, instr string, unavail int, total int);
+CREATE TABLE occ (dt datetime, site string, instr string, unavail int, total int, primary key (dt, site));
 create view v_occ as select *, 1.0*unavail/total*100.0 as pct from occ;
 create view v_date as select date(dt) as dt, site, avg(pct) from v_occ group by date(dt), site;
 

@@ -54,7 +54,7 @@ def getBookableLinks(site, cookies):
 	    if link:
                 classtype = link.span.text.lower()
 		if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
-                    day = int(link.parent.parent["class"][3:])
+                    day = int(link.parent.parent["class"][3:].split(" ")[0])
                     sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
                     dateparts = sdate.split(".")
                     month = int(dateparts[0])
@@ -127,14 +127,17 @@ def processSite(sitename, saveToDB=False):
     sum_unavail = sum_total = 0
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     cookies = loginGetCookies(sitename)
-    #print cookies
+    lastdt = None
     for item in getBookableLinks(sitename, cookies):
-	#print item
         dt, instr, soldout, url = item
-        if dt.date() > tomorrow:
+        if lastdt and dt.date() > lastdt:
             if sum_total:
-                print "total occupancy: %d/%d = %.1f%%" % (sum_unavail, sum_total, float(sum_unavail)/sum_total*100.)
+                print "occupancy for %s: %d/%d = %.1f%%" % (lastdt, sum_unavail, sum_total, float(sum_unavail)/sum_total*100.)
+                print
+                sum_unavail = sum_total = 0
+        if dt.date() > tomorrow:
             break   
+        lastdt = dt.date()
         if soldout:
             unavail = total = CAPACITY[sitename]
             occ = 100.
@@ -145,7 +148,8 @@ def processSite(sitename, saveToDB=False):
         sum_total += total
         if saveToDB:
             curs = conn.cursor()
-            curs.execute("insert or replace into occ values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
+            curs.execute("insert or ignore into occ (dt, site) values (?, ?)", (dt, sitename))
+            curs.execute("update occ set instr=?, unavail=?, total=? where dt=? and site=?", (instr, unavail, total, dt, sitename))
             conn.commit()
 
 def main(saveToDB=False):
