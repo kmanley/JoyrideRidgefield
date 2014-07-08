@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+15-59/3 5 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python scrapeocc.py -db
+*/3 6-20 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python scrapeocc.py -db
+
+

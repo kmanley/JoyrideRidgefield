@@ -1,7 +1,14 @@
-sqlite> create view v_occ as select *, unavail/total*100.0 as pct from occ;
-sqlite> create view v_occ as select *, 1.0*unavail/total*100.0 as pct from occ;
-sqlite> insert into occ values ("2014-07-07", "kev", 20, 100);
-sqlite> select * from v_occ;
+CREATE TABLE occ (dt datetime, site string, instr string, unavail int, total int);
+create view v_occ as select *, 1.0*unavail/total*100.0 as pct from occ;
+create view v_date as select date(dt) as dt, site, avg(pct) from v_occ group by date(dt), site;
+
 # get average occupancy by instructor
 select inst, count(*), avg(pct) as avgpct from v_occ group by inst order by avgpct desc;
+
+# get overall stats by site by date
+select date(dt), site, avg(pct) from v_occ group by date(dt), site;
+or
+select * from v_date where dt='2014-07-08';
+
+
 

@@ -145,7 +145,7 @@ def processSite(sitename, saveToDB=False):
         sum_total += total
         if saveToDB:
             curs = conn.cursor()
-            curs.execute("insert or replace into occ values (?, ?, ?, ?)", (dt, instr, unavail, total))
+            curs.execute("insert or replace into occ values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
             conn.commit()
 
 def main(saveToDB=False):
@@ -156,7 +156,8 @@ def main(saveToDB=False):
 
 if __name__ == "__main__":
     saveToDB = False
-    if "-db" in sys.argv:
+    if "-d" in sys.argv or "-db" in sys.argv:
+        print "will save to db"
         saveToDB = True
     main(saveToDB)
 
