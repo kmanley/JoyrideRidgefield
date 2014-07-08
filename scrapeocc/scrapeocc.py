@@ -45,14 +45,15 @@ TOMORROW = TODAY + datetime.timedelta(days=1)
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
 # so we need to extract date/time/instructor here instead of in getOccupancy
 def getBookableLinks(site, cookies):
-	r = requests.get(CALENDARGET[site], headers=userAgent, cookies=cookies)
+	r = requests.get(CALENDARGET[site], headers=USERAGENT, cookies=cookies)
 	soup = BS(r.text)
 	blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
 	for block in blocks:
 	    #print block
 	    link = block.find("a")
 	    if link:
-		if link.span.text and link.span.text.lower().find("cycle")>-1:
+                classtype = link.span.text.lower()
+		if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
                     day = int(link.parent.parent["class"][3:])
                     sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
                     dateparts = sdate.split(".")
@@ -76,27 +77,31 @@ def getBookableLinks(site, cookies):
 		pass #not bookable - class is in past or cancelled
 
 def getOccupancy(site, url, cookies):
-    r = requests.get("%s%s" % (BASEURL[site], url), headers=userAgent, cookies=cookies)
+    #print "%s%s" % (BASEURL[site], url)
+    #print cookies
+    r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
     soup = BS(r.text)
-    details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
-    if not details:
-        print "found sold out class %s" % url
-        return datetime.datetime(1900,1,1,0,0,0), "Unknown", 0, 0, 100
-    ps = details.findAll("p")
-    date = ps[0].text.strip()[len("Date:")+5:]
-    dateparts = date.split("/")
-    month = int(dateparts[0])
-    day = int(dateparts[1])
-    year = 2000 + int(dateparts[2])
-    time = ps[1].text.strip()[len("Time:"):]
-    timeparts = time[:-1].split(":")
-    hour = int(timeparts[0])
-    minute = int(timeparts[1])
-    if time[-1].lower() == "p" and hour < 12:
-        hour += 12
-    dt = datetime.datetime(year, month, day, hour, minute, 0)
-    instr = ps[2].text.strip()[len("Instructor:"):]
+    #print r.text
+    #details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
+    #if not details:
+    #    print "found sold out class %s" % url
+        #return datetime.datetime(1900,1,1,0,0,0), "Unknown", 0, 0, 100
+    #ps = details.findAll("p")
+    #date = ps[0].text.strip()[len("Date:")+5:]
+    #dateparts = date.split("/")
+    #month = int(dateparts[0])
+    #day = int(dateparts[1])
+    #year = 2000 + int(dateparts[2])
+    #time = ps[1].text.strip()[len("Time:"):]
+    #timeparts = time[:-1].split(":")
+    #hour = int(timeparts[0])
+    #minute = int(timeparts[1])
+    #if time[-1].lower() == "p" and hour < 12:
+    #    hour += 12
+    #dt = datetime.datetime(year, month, day, hour, minute, 0)
+    #instr = ps[2].text.strip()[len("Instructor:"):]
     block = soup.find("div", attrs={"id":"spotwrapper"})
+    #print "block: %s" % block
     avail = 0
     unavail = 0
     for item in block:
@@ -108,27 +113,36 @@ def getOccupancy(site, url, cookies):
             avail += 1
     total = avail + unavail
     occ = float(unavail) / total * 100.
-    return dt, instr, unavail, total, occ
+    #return dt, instr, unavail, total, occ
+    return unavail, total, occ
 
 def loginGetCookies(sitename):
     r = requests.get(LOGINGET[sitename], headers=USERAGENT, allow_redirects=True)
     cookies = r.cookies
     formdata = {'action': 'Account.doLogin', 'username': username, 'password':password}
-    r = requests.post(LOGINPOST[sitename], data=formdata, headers=userAgent, cookies=cookies, allow_redirects=False)
-    return r.cookies
+    r = requests.post(LOGINPOST[sitename], data=formdata, headers=USERAGENT, cookies=cookies, allow_redirects=False)
+    return cookies
 
 def processSite(sitename, saveToDB=False):
+    sum_unavail = sum_total = 0
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
     cookies = loginGetCookies(sitename)
+    #print cookies
     for item in getBookableLinks(sitename, cookies):
+	#print item
         dt, instr, soldout, url = item
         if dt.date() > tomorrow:
+            if sum_total:
+                print "total occupancy: %d/%d = %.1f%%" % (sum_unavail, sum_total, float(sum_unavail)/sum_total*100.)
             break   
         if soldout:
             unavail = total = CAPACITY[sitename]
+            occ = 100.
         else:
-            dt, instr, unavail, total, occ = getOccupancy(url, cookies)
+            unavail, total, occ = getOccupancy(sitename, url, cookies)
         print str(dt), instr, "%d/%d" % (unavail,total), "%.1f%%" % occ
+        sum_unavail += unavail
+        sum_total += total
         if saveToDB:
             curs = conn.cursor()
             curs.execute("insert or replace into occ values (?, ?, ?, ?)", (dt, instr, unavail, total))
