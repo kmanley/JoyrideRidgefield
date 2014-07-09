@@ -39,7 +39,7 @@ CAPACITY = {"westport":44,
 	    "darien":40, 
             "ridgefield":35} # TODO: 35 or 36?
 
-TODAY = datetime.datetime.today()
+TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
 
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
@@ -80,6 +80,7 @@ def getOccupancy(site, url, cookies):
     #print "%s%s" % (BASEURL[site], url)
     #print cookies
     r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
+    open("class_example.html","wb").write(r.text)
     soup = BS(r.text)
     #print r.text
     #details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
@@ -108,7 +109,12 @@ def getOccupancy(site, url, cookies):
         if not hasattr(item, "name"):
             continue
         if item.name == "span":
-            unavail += 1
+            # span class is "spotcell Enrolled" for real booking
+            # it's "spotcell Unavailable" for held spot; we only count real bookings
+            if item["class"].lower().find("enrolled")>-1:
+                unavail += 1
+            else:
+                avail += 1
         elif item.name == "a":
             avail += 1
     total = avail + unavail
@@ -131,10 +137,17 @@ def processSite(sitename, saveToDB=False):
     for item in getBookableLinks(sitename, cookies):
         dt, instr, soldout, url = item
         if lastdt and dt.date() > lastdt:
+            # NOTE: it's *remaining* occupancy for today since it's only correct for the whole day until the point the first
+            # class starts (because after that we can't scrape that class anymore). Better to use db for aggregations
             if sum_total:
-                print "occupancy for %s: %d/%d = %.1f%%" % (lastdt, sum_unavail, sum_total, float(sum_unavail)/sum_total*100.)
-                print
-                sum_unavail = sum_total = 0
+                if lastdt == TODAY:
+                    prefix = "remaining "
+                else:
+                    prefix = ""
+                print "%soccupancy for %s: %d/%d = %.1f%%" % (prefix, lastdt, sum_unavail, 
+			sum_total, float(sum_unavail)/sum_total*100.)
+            print
+            sum_unavail = sum_total = 0
         if dt.date() > tomorrow:
             break   
         lastdt = dt.date()
@@ -152,16 +165,20 @@ def processSite(sitename, saveToDB=False):
             curs.execute("update occ set instr=?, unavail=?, total=? where dt=? and site=?", (instr, unavail, total, dt, sitename))
             conn.commit()
 
-def main(saveToDB=False):
-    for sitename in SITENAMES:
+def main(saveToDB=False, site=None):
+    sitenames = [site] if site else SITENAMES
+    for sitename in sitenames:
         print sitename
         processSite(sitename, saveToDB)
         print "-" * 80
 
 if __name__ == "__main__":
+    sitename = None
+    if len(sys.argv) > 1 and sys.argv[1].find("-d") < 0:
+        sitename = sys.argv[1].lower().strip()
     saveToDB = False
-    if "-d" in sys.argv or "-db" in sys.argv:
+    if sys.argv[-1].find("-d") > -1:
         print "will save to db"
         saveToDB = True
-    main(saveToDB)
+    main(saveToDB, sitename)
 
