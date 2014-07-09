@@ -1,7 +1,6 @@
 CREATE TABLE occ (dt datetime, site string, instr string, unavail int, total int, primary key (dt, site));
 create view v_occ as select *, 1.0*unavail/total*100.0 as pct from occ;
-create view v_date as select date(dt) as dt, site, avg(pct) from v_occ group by date(dt), site;
-create view v_date as select date(dt) as dt, site, sum(unavail) as unavail, sum(total) as total, avg(pct) as pct from v_occ group by date(dt), site;
+create view v_date as select date(dt) as dt, site, count(*) as cnt, sum(unavail) as unavail, sum(total) as total, avg(pct) as pct from v_occ group by date(dt), site;
 
 # get average occupancy by instructor
 select inst, count(*), avg(pct) as avgpct from v_occ group by inst order by avgpct desc;
