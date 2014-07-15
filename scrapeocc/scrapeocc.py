@@ -31,8 +31,8 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
             "darien"   : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=",}
 
-CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport",
-	       "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien",
+CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
+	       "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
                "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass"} # TODO:
 
 CAPACITY = {"westport":44, 
@@ -53,7 +53,9 @@ def getBookableLinks(site, cookies):
 	    link = block.find("a")
 	    if link:
                 classtype = link.span.text.lower()
-		if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
+		# we changed links to filter by room, so don't have to guess if it's a cycle class based on name anymore
+		if True:
+		#if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
                     day = int(link.parent.parent["class"][3:].split(" ")[0])
                     sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
                     dateparts = sdate.split(".")
