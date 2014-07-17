@@ -46,8 +46,27 @@ firstname string,
 lastname string,
 studio string,
 id INTEGER PRIMARY KEY AUTOINCREMENT
-
 );
+
+create table attend (
+id int,
+custid int,
+firstname string,
+lastname string,
+emailaddress string,
+status string,
+spot int,
+datein datetime,
+seriesid int,
+series string,
+classdate datetime,
+classtype string,
+inst string,
+room string,
+cost float,
+primary key (id)
+);
+
 
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
