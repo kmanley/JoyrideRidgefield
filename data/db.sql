@@ -85,5 +85,16 @@ create view vw_birthday as select firstname, lastname, emailaddress, birthdate, 
 
 select * from vw_birthday where mmdd = '07-17';
 
+-- super16 stuff
+select firstname, lastname, count(*) 
+from attend 
+where status='Enrolled' and date(classdate) >= '2014-07-01' and date(classdate) <= '2014-07-18' 
+group by firstname, lastname 
+having count(*) > 5 
+order by lastname, firstname;
+
+
+
+
 
 
