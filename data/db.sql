@@ -88,12 +88,18 @@ select * from vw_birthday where mmdd = '07-17';
 -- super16 stuff
 select firstname, lastname, count(*) 
 from attend 
-where status='Enrolled' and date(classdate) >= '2014-07-01' and date(classdate) <= '2014-07-18' 
+where status='Enrolled' and date(classdate) >= '2014-07-01' and date(classdate) <= '2014-07-22' 
 group by firstname, lastname 
 having count(*) > 5 
 order by lastname, firstname;
 
-
+-- 100 rider wall of joy stuff
+select firstname, lastname, count(*) 
+from attend 
+where status='Enrolled' and date(classdate) >= '2014-01-01' and date(classdate) <= '2014-07-31' 
+group by firstname, lastname 
+having count(*) >= 90
+order by lastname, firstname;
 
 
 

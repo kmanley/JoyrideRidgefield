@@ -7,6 +7,7 @@ def main(csvfile):
 	#print csvfile
 	conn = sqlite3.connect("joyridge.dat")
 	curs = conn.cursor()
+	curs.execute("delete from cust")
     # 0x0d line terminators - I told you zingfit sucks! 
 	lines = [x.strip() for x in open(csvfile, "rb").read().split("\r")]
 	for i, line in enumerate(lines):
@@ -29,10 +30,11 @@ def main(csvfile):
 			return
 			sys.exit(2)
 		cols = [unicode(col[1:-1] if col.startswith('"') else col, encoding="latin-1") for col in cols]
-		print cols
+		#print cols
 		curs.execute("insert into cust values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 	             tuple(cols))
 	conn.commit()
+	print "loaded %d customers" % i
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
