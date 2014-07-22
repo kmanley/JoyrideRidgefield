@@ -81,7 +81,7 @@ group by yymm, cty
 having ttl>0 
 order by yymm,cty;
 
-create view vw_birthday as select firstname, lastname, emailaddress, birthdate, strftime("%m-%d", birthdate) as mmdd from cust;
+create view vw_birthday as select id, firstname, lastname, emailaddress, birthdate, strftime("%m-%d", birthdate) as mmdd from cust;
 
 select * from vw_birthday where mmdd = '07-17';
 
@@ -94,12 +94,27 @@ having count(*) > 5
 order by lastname, firstname;
 
 -- 100 rider wall of joy stuff
-select firstname, lastname, count(*) 
+select firstname, lastname, count(*) as cnt
 from attend 
-where status='Enrolled' and date(classdate) >= '2014-01-01' and date(classdate) <= '2014-07-31' 
+where status='Enrolled' and date(classdate) >= '2014-01-01' and date(classdate) <= date('now','+10 days')
 group by firstname, lastname 
-having count(*) >= 90
+having cnt > 0 and cnt % 50 = 0
 order by lastname, firstname;
+
+-- attendance by customer by month
+create view vw_attendbymonth as select custid, firstname, lastname, count(*) as cnt, strftime("%m-%Y", classdate) as mmyy from attend where status='Enrolled' group by custid, mmyy;
+
+--note: we add 7 days here because the person might have future bookings; don't want to consider someone lapsed if they have lots of future bookings
+create view vw_attendlast30 as select custid, firstname, lastname, count(*) as cnt, date('now','-30 days') as start, date('now', '+7 days') as end from attend where status='Enrolled' and classdate >=start and classdate <= end group by custid;
+create view vw_attendprev30 as select custid, firstname, lastname, count(*) as cnt, date('now','-60 days') as start, date('now', '-30 days') as end from attend where status='Enrolled' and classdate >=start and classdate < end group by custid;
+
+create view vw_riderstrendingup   as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where last30 > prev30 order by last30-prev30 desc;
+-- note: the complicated order by is designed to flag the best customers who are trending down
+create view vw_riderstrendingdown as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where prev30 > 0 and prev30 > last30 order by (1.0*prev30)/(1*last30) * (prev30-last30) desc;
+
+create view vw_riderslapsed as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where prev30 > 0 and v2.cnt is null order by prev30 desc;
+
+
 
 
 

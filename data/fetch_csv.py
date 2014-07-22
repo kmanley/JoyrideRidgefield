@@ -14,6 +14,7 @@ log = logging.getLogger()
 log.setLevel(logging.WARNING)
 
 TODAY = datetime.date.today()
+TODAYPLUS10 = TODAY + datetime.timedelta(days=10)
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
 
 def login():
@@ -47,7 +48,7 @@ def saveSales(cookies):
 
 def getAttendance(cookies):
 	r = requests.get("http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport", headers=USERAGENT, cookies=cookies)
-	url = "http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&roomid=1&start=1/21/14&end=%s/%s/%s&go=GO" % (TODAY.month, TODAY.day, TODAY.year-2000)
+	url = "http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&roomid=1&start=1/21/14&end=%s/%s/%s&go=GO" % (TODAYPLUS10.month, TODAYPLUS10.day, TODAYPLUS10.year-2000)
 	r = requests.get(url, headers=USERAGENT, cookies=cookies)
 	r = requests.get("http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&export=csv", headers=USERAGENT, cookies=cookies)
 	return r.text.encode("utf-8")	
