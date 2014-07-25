@@ -94,12 +94,11 @@ having count(*) > 5
 order by lastname, firstname;
 
 -- 100 rider wall of joy stuff
-select firstname, lastname, count(*) as cnt
-from attend 
-where status='Enrolled' and date(classdate) >= '2014-01-01' and date(classdate) <= date('now','+10 days')
+select firstname, lastname, count(*) as cnt, date(classdate) as asof from attend 
 group by firstname, lastname 
-having cnt > 0 and cnt % 50 = 0
 order by lastname, firstname;
+
+
 
 -- attendance by customer by month
 create view vw_attendbymonth as select custid, firstname, lastname, count(*) as cnt, strftime("%m-%Y", classdate) as mmyy from attend where status='Enrolled' group by custid, mmyy;
@@ -114,8 +113,7 @@ create view vw_riderstrendingdown as select v1.custid, v1.firstname, v1.lastname
 
 create view vw_riderslapsed as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where prev30 > 0 and v2.cnt is null order by prev30 desc;
 
+-- list upcoming milestone riders (multiple of 50)
+create view vw_milestone as select custid, firstname, lastname, count(*) as cnt, max(classdate) as classdate from attend where status='Enrolled' and date(classdate)<=date('now','+10 day') group by custid having cnt % 50 = 0;
 
-
-
-
-
+select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
