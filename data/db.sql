@@ -104,16 +104,50 @@ order by lastname, firstname;
 create view vw_attendbymonth as select custid, firstname, lastname, count(*) as cnt, strftime("%m-%Y", classdate) as mmyy from attend where status='Enrolled' group by custid, mmyy;
 
 --note: we add 7 days here because the person might have future bookings; don't want to consider someone lapsed if they have lots of future bookings
-create view vw_attendlast30 as select custid, firstname, lastname, count(*) as cnt, date('now','-30 days') as start, date('now', '+7 days') as end from attend where status='Enrolled' and classdate >=start and classdate <= end group by custid;
-create view vw_attendprev30 as select custid, firstname, lastname, count(*) as cnt, date('now','-60 days') as start, date('now', '-30 days') as end from attend where status='Enrolled' and classdate >=start and classdate < end group by custid;
 
-create view vw_riderstrendingup   as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where last30 > prev30 order by last30-prev30 desc;
+drop view vw_attendlast30;
+create view vw_attendlast30 as select custid, attend.firstname, attend.lastname, attend.emailaddress, 
+phone, phone2, count(*) as cnt, date('now','-30 days') as start, 
+date('now', '+7 days') as end 
+from attend join cust on attend.custid=cust.id where status='Enrolled' and 
+	classdate >=start and classdate <= end group by custid;
+
+drop view vw_attendprev30;
+create view vw_attendprev30 as select custid, a.firstname, a.lastname, a.emailaddress,
+phone, phone2, count(*) as cnt, date('now','-60 days') as start, 
+date('now', '-30 days') as end 
+from attend a join cust c on a.custid=c.id where status='Enrolled' and 
+classdate >=start and classdate < end group by custid;
+
+drop view vw_riderstrendingup;
+create view vw_riderstrendingup as 
+select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2, v1.cnt as prev30, v2.cnt as last30 
+from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid 
+where last30 > prev30 
+order by last30-prev30 desc;
+
 -- note: the complicated order by is designed to flag the best customers who are trending down
-create view vw_riderstrendingdown as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where prev30 > 0 and prev30 > last30 order by (1.0*prev30)/(1*last30) * (prev30-last30) desc;
+drop view vw_riderstrendingdown;
+create view vw_riderstrendingdown as 
+select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2, 
+v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid 
+where prev30 > 0 and prev30 > last30 
+order by (1.0*prev30)/(1*last30) * (prev30-last30) desc;
 
-create view vw_riderslapsed as select v1.custid, v1.firstname, v1.lastname, v1.cnt as prev30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid where prev30 > 0 and v2.cnt is null order by prev30 desc;
+drop view vw_riderslapsed;
+create view vw_riderslapsed as 
+select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2,
+v1.cnt as prev30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid 
+where prev30 > 0 and v2.cnt is null 
+order by prev30 desc;
 
 -- list upcoming milestone riders (multiple of 50)
-create view vw_milestone as select custid, firstname, lastname, count(*) as cnt, max(classdate) as classdate from attend where status='Enrolled' and date(classdate)<=date('now','+10 day') group by custid having cnt % 50 = 0;
+drop view vw_milestone;
+create view vw_milestone as select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, 
+count(*) as cnt, max(classdate) as classdate 
+from attend a join cust c on a.custid=c.id 
+where status='Enrolled' and date(classdate)<=date('now','+10 day') 
+group by custid having cnt % 50 = 0;
 
 select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
+
