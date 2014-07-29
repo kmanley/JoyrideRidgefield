@@ -156,3 +156,6 @@ group by custid having cnt % 50 = 0;
 
 select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
 
+
+create view v_totalsalesbyitem as select item, sum(total) from sale group by item order by sum(total) desc;
+
