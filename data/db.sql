@@ -161,6 +161,17 @@ from attend a join cust c on a.custid=c.id
 where status='Enrolled' and date(classdate)<=date('now','+10 day') 
 group by custid having cnt % 50 = 0;
 
+-- see who's getting close to a multiple of 100
+create view vw_wallofjoy as
+select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, 
+count(*) as cnt, max(classdate) as classdate 
+from attend a join cust c on a.custid=c.id 
+where status='Enrolled' and date(classdate)<=date('now','+10 day') 
+group by custid having (cnt > 90 and cnt < 100) or (cnt > 190 and cnt < 200) or (cnt > 290 and cnt < 300)
+or (cnt > 390 and cnt < 400) or (cnt > 490 and cnt < 500) or (cnt > 590 and cnt < 600) or (cnt > 690 and cnt < 700)
+or (cnt > 790 and cnt < 800) or (cnt > 890 and cnt < 900) or (cnt > 990 and cnt < 1000) ;
+
+
 select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
 
 
