@@ -86,9 +86,16 @@ group by yymm, cty
 having ttl>0 
 order by yymm,cty;
 
-create view vw_birthday as select id, firstname, lastname, emailaddress, birthdate, strftime("%m-%d", birthdate) as mmdd from cust;
+create view vw_birthday as select id, firstname, lastname, emailaddress, birthdate, 
+strftime('%Y', date('now'))||'-'||strftime("%m-%d", birthdate) as birthday 
+from cust;
 
-select * from vw_birthday where mmdd = '07-17';
+-- custs with birthdays in next 7 days
+select * from vw_birthday where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
+
+-- TODO: select people riding this week who have a birthday this week
+select * from vw_birthday b join attend a on b.id=a.custid and date(b.birthday)=date(a.classdate)
+where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
 
 -- super16 stuff
 select firstname, lastname, count(*) 
@@ -129,7 +136,7 @@ create view vw_riderstrendingup as
 select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2, v1.cnt as prev30, v2.cnt as last30 
 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid 
 where last30 > prev30 
-order by last30-prev30 desc;
+order by last30-prev30 desc, last30 desc;
 
 -- note: the complicated order by is designed to flag the best customers who are trending down
 drop view vw_riderstrendingdown;
