@@ -86,7 +86,7 @@ group by yymm, cty
 having ttl>0 
 order by yymm,cty;
 
-create view vw_birthday as select id, firstname, lastname, emailaddress, birthdate, 
+create view vw_birthday as select id, firstname, lastname, emailaddress, phone, phone2, birthdate, 
 strftime('%Y', date('now'))||'-'||strftime("%m-%d", birthdate) as birthday 
 from cust;
 
@@ -94,7 +94,9 @@ from cust;
 select * from vw_birthday where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
 
 -- TODO: select people riding this week who have a birthday this week
-select * from vw_birthday b join attend a on b.id=a.custid and date(b.birthday)=date(a.classdate)
+create view vw_birthdayriders
+as
+select b.id, b.firstname, b.lastname, b.emailaddress, b.phone, b.phone2, b.birthdate, a.classdate from vw_birthday b join attend a on b.id=a.custid and date(b.birthday)=date(a.classdate)
 where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
 
 -- super16 stuff
@@ -167,9 +169,9 @@ select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2,
 count(*) as cnt, max(classdate) as classdate 
 from attend a join cust c on a.custid=c.id 
 where status='Enrolled' and date(classdate)<=date('now','+10 day') 
-group by custid having (cnt > 90 and cnt < 100) or (cnt > 190 and cnt < 200) or (cnt > 290 and cnt < 300)
-or (cnt > 390 and cnt < 400) or (cnt > 490 and cnt < 500) or (cnt > 590 and cnt < 600) or (cnt > 690 and cnt < 700)
-or (cnt > 790 and cnt < 800) or (cnt > 890 and cnt < 900) or (cnt > 990 and cnt < 1000) ;
+group by custid having (cnt > 90 and cnt <= 100) or (cnt > 190 and cnt <= 200) or (cnt > 290 and cnt <= 300)
+or (cnt > 390 and cnt <= 400) or (cnt > 490 and cnt <= 500) or (cnt > 590 and cnt <= 600) or (cnt > 690 and cnt <= 700)
+or (cnt > 790 and cnt <= 800) or (cnt > 890 and cnt <= 900) or (cnt > 990 and cnt <= 1000) ;
 
 
 select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
