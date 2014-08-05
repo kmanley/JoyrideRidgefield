@@ -165,7 +165,7 @@ create view vw_milestone as select custid, a.firstname, a.lastname, a.emailaddre
 count(*) as cnt, max(classdate) as classdate 
 from attend a join cust c on a.custid=c.id 
 where status='Enrolled' and date(classdate)<=date('now','+10 day') 
-group by custid having cnt % 50 = 0;
+group by custid having cnt % 50 = 0
 order by cnt desc;
 
 -- see who's getting close to a multiple of 100
