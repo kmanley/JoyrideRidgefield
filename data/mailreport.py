@@ -6,7 +6,6 @@ import datetime
 
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
-TOMORROW = TODAY + datetime.timedelta(days=1)
 
 conn = sqlite3.connect("joyridge.dat")
 
@@ -91,9 +90,9 @@ def main():
 	io.write("<h4>Riders with birthdays this week</h4>")
 	io.write(get_birthdayriders())
 	io.write("</body></html>")
-	#send_report(io.getvalue(), 'Occupancy report %s - %s' % (str(TODAY), str(TOMORROW)))
-	with open("/tmp/test.html","wb") as fp:
-		fp.write(io.getvalue())    
+	send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
+	#with open("/tmp/test.html","wb") as fp:
+	#	fp.write(io.getvalue())    
 
 if __name__ == "__main__":
     main()
