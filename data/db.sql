@@ -74,9 +74,11 @@ create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 --select lower(city), sum(total) from v_sale group by lower(city) having sum(total)>0 order by sum(total) desc;
 
 -- TODO: consider not including comps
+/*
 create view v_salesbydate
 as
 select sum(total) from v_sale group by dt order by date desc;
+*/
 
 -- sales by city by month
 /*
