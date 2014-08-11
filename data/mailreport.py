@@ -50,13 +50,17 @@ def get_wallofjoy():
 
 def get_birthdayriders():
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_birthdayriders").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_birthdaysthisweek where classdate is not null").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Birthday</th><th>Riding on</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, birthday, classday = row
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, birthday, classday))
+			#birthdate is actual historical day, birthday is that day this year
+			_, firstname, lastname, email, phone1, _, birthdate, birthday, classday = row
+			if birthday[:10] == classday[:10]:
+				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday))
+			else:
+			    io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -90,9 +94,9 @@ def main():
 	io.write("<h4>Riders with birthdays this week</h4>")
 	io.write(get_birthdayriders())
 	io.write("</body></html>")
-	send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
-	#with open("/tmp/test.html","wb") as fp:
-	#	fp.write(io.getvalue())    
+	#send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
+	with open("/tmp/test.html","wb") as fp:
+		fp.write(io.getvalue())    
 
 if __name__ == "__main__":
     main()

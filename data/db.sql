@@ -97,11 +97,25 @@ from cust;
 -- custs with birthdays in next 7 days
 --select * from vw_birthday where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
 
--- TODO: select people riding this week who have a birthday this week
+-- this selects riders with a birthday this week; if they are riding this week the classdate is shown (last col)
+drop view vw_birthdaysthisweek;
+create view vw_birthdaysthisweek
+as
+select b.id, b.firstname, b.lastname, b.emailaddress, b.phone, b.phone2, b.birthdate, b.birthday, a.classdate 
+from vw_birthday b left outer join attend a on b.id=a.custid and (a.classdate >= date('now') and a.classdate <= date('now', '+7 days'))
+where birthday >= date('now') and birthday <= date('now', '+7 days') order by birthday;
+
+-- this selects riders who have a birthday this week and are riding on their birthday
+drop view vw_birthdayriders;
 create view vw_birthdayriders
 as
-select b.id, b.firstname, b.lastname, b.emailaddress, b.phone, b.phone2, b.birthdate, a.classdate from vw_birthday b join attend a on b.id=a.custid and date(b.birthday)=date(a.classdate)
-where birthday > date('now') and birthday < date('now', '+7 days') order by birthday;
+select * from vw_birthdaysthisweek 
+where date(birthday)=date(classdate)
+order by birthdate;
+
+
+
+
 
 -- super16 stuff
 /*
@@ -124,7 +138,6 @@ order by lastname, firstname;
 create view vw_attendbymonth as select custid, firstname, lastname, count(*) as cnt, strftime("%m-%Y", classdate) as mmyy from attend where status='Enrolled' group by custid, mmyy;
 
 --note: we add 7 days here because the person might have future bookings; don't want to consider someone lapsed if they have lots of future bookings
-
 --drop view vw_attendlast30;
 create view vw_attendlast30 as select custid, attend.firstname, attend.lastname, attend.emailaddress, 
 phone, phone2, count(*) as cnt, date('now','-30 days') as start, 
