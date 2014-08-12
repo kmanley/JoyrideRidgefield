@@ -113,10 +113,6 @@ select * from vw_birthdaysthisweek
 where date(birthday)=date(classdate)
 order by birthdate;
 
-
-
-
-
 -- super16 stuff
 /*
 select firstname, lastname, count(*) 
@@ -138,7 +134,7 @@ order by lastname, firstname;
 create view vw_attendbymonth as select custid, firstname, lastname, count(*) as cnt, strftime("%m-%Y", classdate) as mmyy from attend where status='Enrolled' group by custid, mmyy;
 
 --note: we add 7 days here because the person might have future bookings; don't want to consider someone lapsed if they have lots of future bookings
---drop view vw_attendlast30;
+	--drop view vw_attendlast30;
 create view vw_attendlast30 as select custid, attend.firstname, attend.lastname, attend.emailaddress, 
 phone, phone2, count(*) as cnt, date('now','-30 days') as start, 
 date('now', '+7 days') as end 
@@ -151,6 +147,26 @@ phone, phone2, count(*) as cnt, date('now','-60 days') as start,
 date('now', '-30 days') as end 
 from attend a join cust c on a.custid=c.id where status='Enrolled' and 
 classdate >=start and classdate < end group by custid;
+
+-- TODO: change date back to now; confirm working
+drop view vw_attendfuture;
+create view vw_attendfuture as select custid, attend.firstname, attend.lastname, attend.emailaddress, 
+phone, phone2, date('2014-07-15') as start, date('2014-07-15', '+7 days') as end, attend.classdate 
+from attend join cust on attend.custid=cust.id where status='Enrolled' and 
+	classdate >=start and classdate <= end group by custid;
+
+-- TODO: confirm working
+drop view vw_doublesthisweek; 
+create view vw_doublesthisweek
+as
+select custid, firstname, lastname, emailaddress, phone, phone2, classdate, count(*) as cnt
+from vw_attendfuture
+group by custid, date(classdate)
+having cnt > 1
+order by classdate;
+
+-- TODO: top riders query; just raw number of rides in past X days, not considering previous time period.
+
 
 --drop view vw_riderstrendingup;
 create view vw_riderstrendingup as 

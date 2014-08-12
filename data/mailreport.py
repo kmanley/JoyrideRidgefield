@@ -57,6 +57,8 @@ def get_birthdayriders():
 		for i, row in enumerate(rows):
 			#birthdate is actual historical day, birthday is that day this year
 			_, firstname, lastname, email, phone1, _, birthdate, birthday, classday = row
+			birthdate = birthdate[:10]
+			classday = classday[:16]
 			if birthday[:10] == classday[:10]:
 				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday))
 			else:
