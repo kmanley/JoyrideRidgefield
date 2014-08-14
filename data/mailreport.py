@@ -4,10 +4,22 @@ import getpass
 import sqlite3
 import datetime
 
+dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
 conn = sqlite3.connect("joyridge.dat")
+
+def get_toprecent(limit):
+    io = StringIO.StringIO()
+    rows = conn.cursor().execute("select * from vw_attendlast30 order by cnt desc limit ?", (limit,)).fetchall()
+    io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+    io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th># Rides</th></tr>")
+    for i, row in enumerate(rows):
+		_, firstname, lastname, email, phone1, _, cnt, frm, to = row
+		io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt))
+    io.write("</table>")
+    return io.getvalue()
 
 def get_trending(direction, limit):
     io = StringIO.StringIO()
@@ -42,11 +54,29 @@ def get_wallofjoy():
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th># Classes</th><th>As of</th></tr>")
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, phone1, _, cnt, asof = row
+			asof = asof[:16]
 			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt, asof))
 		io.write("</table>")
     else:
 		io.write("None")
     return io.getvalue()
+
+def get_crazies():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_doublesthisweek order by firstclass;").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th>Name</th><th>Email</th><th>First</th><th>Last</th><th>Count</th></tr>")
+		for i, row in enumerate(rows):
+			_, firstname, lastname, email, firstclass, lastclass, cnt = row
+			firstclass = firstclass[:16]
+			lastclass = lastclass[:16]
+			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
 
 def get_birthdayriders():
     io = StringIO.StringIO()
@@ -72,7 +102,7 @@ def get_birthdayriders():
 def send_report(report, subj):
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    to_addr=['kevin@joyrideridgefield.com', 'amypal@joyrideridgefield.com'],
+	    to_addr=['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com', 'cindy@joyrideridgefield.com'],
 	    subject=subj,
 	    html_body=report
 	)
@@ -82,23 +112,31 @@ def send_report(report, subj):
 					tls=True, port=587)
 
 def main():
-	limit = 25
+	limit = 20
 	io = StringIO.StringIO()
 	io.write("<html><body>")
-	io.write("<h4>Top %d riders trending up</h4>" % limit)
-	io.write(get_trending("up", limit))
-	io.write("<h4>Top %d riders trending down</h4>" % limit)
-	io.write(get_trending("down", limit))
-	io.write("<h4>Top %d riders recently lapsed</h4>" % limit)
-	io.write(get_lapsed(limit))
+	io.write("Good morning. You look amazing today! Here's your morning report.<br/>")
+	io.write("<h4>Riders with birthdays in next 7 days</h4>")
+	io.write(get_birthdayriders())
 	io.write("<h4>Riders approaching Wall of Joy milestone</h4>")
 	io.write(get_wallofjoy())
-	io.write("<h4>Riders with birthdays this week</h4>")
-	io.write(get_birthdayriders())
+	io.write("<h4>Riders doing doubles this week</h4>")
+	io.write(get_crazies())
+	io.write("<h4>Top %d riders over past 30 days</h4>" % limit)
+	io.write(get_toprecent(limit))
+	io.write("<h4>Top %d up-trending riders over past 30 days</h4>" % limit)
+	io.write(get_trending("up", limit))
+	io.write("<h4>Top %d down-trending riders over past 30 days</h4>" % limit)
+	io.write(get_trending("down", limit))
+	io.write("<h4>Top %d riders lapsed in past 30 days</h4>" % limit)
+	io.write(get_lapsed(limit))
+	io.write("<br/>Best regards,<br/>JoyRide Robot")
 	io.write("</body></html>")
-	#send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
-	with open("/tmp/test.html","wb") as fp:
-		fp.write(io.getvalue())    
+	if dryRun:
+		with open("/tmp/test.html","wb") as fp:
+			fp.write(io.getvalue())    
+	else:
+		send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
 
 if __name__ == "__main__":
     main()
