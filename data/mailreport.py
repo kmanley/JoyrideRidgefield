@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = True
+dryRun = False 
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
@@ -103,6 +103,7 @@ def send_report(report, subj):
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
 	    to_addr=['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com', 'cindy@joyrideridgefield.com'],
+            #to_addr=['kevin.manley@gmail.com'],
 	    subject=subj,
 	    html_body=report
 	)
