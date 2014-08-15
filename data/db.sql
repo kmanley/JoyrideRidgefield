@@ -256,6 +256,29 @@ from sale
 where pmtype != 'Comp' and date(dt) >= date('now', '-7 days')
 group by item order by total desc;
 
+drop view vw_totalsaleslast30;
+create view vw_totalsaleslast30 as 
+select count(*) as cnt, sum(total) as total 
+from sale 
+where pmtype != 'Comp' and date(dt) >= date('now', '-30 days');
 
+drop view vw_totalsaleslast7;
+create view vw_totalsaleslast7 as 
+select count(*) as cnt, sum(total) as total 
+from sale 
+where pmtype != 'Comp' and date(dt) >= date('now', '-7 days');
+
+drop view vw_compslast7;
+create view vw_compslast7 as 
+select dt, custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, item, total 
+from sale join cust c on sale.custid=c.id 
+where (pmtype == 'Comp' or total=0) and date(dt) >= date('now', '-7 days')
+group by custid, item order by item, dt desc;
+
+drop view vw_refundslast7;
+create view vw_refundslast7 as 
+select dt, custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, item, pmtype, total
+from sale join cust c on sale.custid=c.id 
+where total < 0 and date(dt) >= date('now', '-7 days');
 
 
