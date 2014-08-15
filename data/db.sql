@@ -214,3 +214,48 @@ order by cnt desc;
 
 --create view v_totalsalesbyitem as select item, sum(total) from sale group by item order by sum(total) desc;
 
+drop view vw_customersalesalltime;
+create view vw_customersalesalltime as 
+select custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, sum(total) as total 
+from sale join cust c on sale.custid=c.id 
+where pmtype != 'Comp'
+group by custid order by total desc;
+
+drop view vw_customersaleslast30;
+create view vw_customersaleslast30 as 
+select custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, sum(total) as total 
+from sale join cust c on sale.custid=c.id 
+where pmtype != 'Comp' and date(dt) >= date('now', '-30 days')
+group by custid order by total desc;
+
+drop view vw_customersaleslast7;
+create view vw_customersaleslast7 as 
+select custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, sum(total) as total 
+from sale join cust c on sale.custid=c.id 
+where pmtype != 'Comp' and date(dt) >= date('now', '-7 days')
+group by custid order by total desc;
+
+drop view vw_itemsaleslastalltime;
+create view vw_itemsalesalltime as 
+select item, count(*) as cnt, sum(total) as total 
+from sale 
+where pmtype != 'Comp' 
+group by item order by total desc;
+
+drop view vw_itemsaleslast30;
+create view vw_itemsaleslast30 as 
+select item, count(*) as cnt, sum(total) as total 
+from sale 
+where pmtype != 'Comp' and date(dt) >= date('now', '-30 days')
+group by item order by total desc;
+
+drop view vw_itemsaleslast7;
+create view vw_itemsaleslast7 as 
+select item, count(*) as cnt, sum(total) as total 
+from sale 
+where pmtype != 'Comp' and date(dt) >= date('now', '-7 days')
+group by item order by total desc;
+
+
+
+
