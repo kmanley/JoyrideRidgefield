@@ -37,7 +37,7 @@ CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?acti
 
 CAPACITY = {"westport":44, 
 	    "darien":40, 
-            "ridgefield":35} # TODO: 35 or 36?
+            "ridgefield":39} 
 
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
