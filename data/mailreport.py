@@ -102,7 +102,7 @@ def get_birthdayriders():
 def send_report(report, subj):
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    to_addr=['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com', 'cindy@joyrideridgefield.com'],
+	    to_addr=['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com'],
             #to_addr=['kevin.manley@gmail.com'],
 	    subject=subj,
 	    html_body=report
