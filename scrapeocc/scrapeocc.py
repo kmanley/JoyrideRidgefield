@@ -15,29 +15,35 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
-SITENAMES = ["westport", "darien", "ridgefield"] # TODO: texas
+SITENAMES = ["westport", "darien", "ridgefield", "texas"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
            "darien" : "http://www.joyridestudio.com",
-           "ridgefield" : "http://www.joyrideridgefield.com"}
+           "ridgefield" : "http://www.joyrideridgefield.com",
+           "texas" : "http://www.joyridetexas.com"}
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
 
 LOGINGET = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien"   : "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
-            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=Account.login",}
+            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=Account.login",
+            "texas" : "http://www.joyridetexas.com/reserve/index.cfm?action=Account.login"}
 
 LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien"   : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=",}
+            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=",
+            "texas" : "http://www.joyridetexas.com/reserve/index.cfm?action="}
 
 CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
-	       "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
-               "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass"} # TODO:
+	           "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
+               "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass",
+               "texas":"http://www.joyridetexas.com/reserve/index.cfm?action=Reserve.chooseClass",
+               } 
 
 CAPACITY = {"westport":44, 
-	    "darien":40, 
-            "ridgefield":39} 
+			"darien":40, 
+            "ridgefield":39,
+            "texas":35,}
 
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
