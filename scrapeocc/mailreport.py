@@ -4,13 +4,13 @@ import getpass
 import sqlite3
 import datetime
 
+dryRun = False
+
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
 
 conn = sqlite3.connect("occupancy.db")
-
-#SITENAMES = ["ridgefield", "westport", "darien"]
 
 def get_table(dt):
     io = StringIO.StringIO()
@@ -54,9 +54,13 @@ def main():
 	io.write("<h4>Tomorrow</h4>")
 	io.write(get_table(TOMORROW))
 	io.write("</body></html>")
-	send_report(io.getvalue(), 'Occupancy report %s - %s' % (str(TODAY), str(TOMORROW)))
-	#with open("/tmp/test.html","wb") as fp:
-	#	fp.write(io.getvalue())    
+	if dryRun:
+		filename = "/tmp/test.html"
+		print "dryRun: wrote %s" % filename
+		with open(filename, "wb") as fp:
+			fp.write(io.getvalue())    
+	else:
+		send_report(io.getvalue(), 'Occupancy report %s - %s' % (str(TODAY), str(TOMORROW)))
         
     
 
