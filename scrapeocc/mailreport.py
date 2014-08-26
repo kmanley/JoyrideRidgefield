@@ -15,7 +15,7 @@ conn = sqlite3.connect("occupancy.db")
 def get_table(dt):
     io = StringIO.StringIO()
     #curs = conn.cursor()
-    rows = list(conn.cursor().execute("select * from v_occ where date(dt) = ? order by site, dt;", (dt,)).fetchall())
+    rows = list(conn.cursor().execute("select * from v_occ where date(dt) = ? order by case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end, dt;", (dt,)).fetchall())
     #rows = curs.fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Date/time</th><th>Studio</th><th>Instr/Count</th><th>Sold</th><th>Total</th><th>Occupancy</th></tr>")
