@@ -47,10 +47,15 @@ def saveSales(cookies):
 		fp.write(getSales(cookies))
 
 def getAttendance(cookies):
+	#print requests.utils.dict_from_cookiejar(cookies)	
 	r = requests.get("http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport", headers=USERAGENT, cookies=cookies)
+	#print requests.utils.dict_from_cookiejar(r.cookies)	
 	url = "http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&roomid=1&start=1/21/14&end=%s/%s/%s&go=GO" % (TODAYPLUS10.month, TODAYPLUS10.day, TODAYPLUS10.year-2000)
 	r = requests.get(url, headers=USERAGENT, cookies=cookies)
-	r = requests.get("http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&export=csv", headers=USERAGENT, cookies=cookies)
+	#print requests.utils.dict_from_cookiejar(r.cookies)	
+	url="http://www.joyrideridgefield.com/admin/index.cfm?action=Report.attendanceExport&roomid=1&export=csv"
+	r = requests.get(url, headers=USERAGENT, cookies=cookies)
+	#print requests.utils.dict_from_cookiejar(r.cookies)	
 	return r.text.encode("utf-8")	
 		
 def saveAttendance(cookies):
