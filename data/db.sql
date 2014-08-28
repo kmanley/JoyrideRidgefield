@@ -195,15 +195,19 @@ where prev30 > 0 and v2.cnt is null
 order by prev30 desc;
 
 -- list upcoming milestone riders (multiple of 50)
---drop view vw_milestone;
+/*
+drop view vw_milestone;
 create view vw_milestone as select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, 
 count(*) as cnt, max(classdate) as classdate 
 from attend a join cust c on a.custid=c.id 
 where status='Enrolled' and date(classdate)<=date('now','+10 day') 
 group by custid having cnt % 50 = 0
 order by cnt desc;
+*/
 
 -- see who's getting close to a multiple of 100
+/*
+drop view vw_wallofjoy;
 create view vw_wallofjoy as
 select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, 
 count(*) as cnt, max(classdate) as classdate 
@@ -213,6 +217,18 @@ group by custid having (cnt > 90 and cnt <= 100) or (cnt > 190 and cnt <= 200) o
 or (cnt > 390 and cnt <= 400) or (cnt > 490 and cnt <= 500) or (cnt > 590 and cnt <= 600) or (cnt > 690 and cnt <= 700)
 or (cnt > 790 and cnt <= 800) or (cnt > 890 and cnt <= 900) or (cnt > 990 and cnt <= 1000)
 order by cnt desc;
+*/
+
+drop view vw_milestonenext7;
+create view vw_milestonenext7
+as
+select custid, c.firstname, c.lastname, c.emailaddress, phone, phone2, classdate, num 
+from attend join cust c on attend.custid=c.id 
+where classdate between date('now') and date('now','+7 days') and ((num between 98 and 100) or (num between 198 and 200) or 
+(num between 298 and 300) or (num between 398 and 400) or (num between 498 and 500) 
+or (num between 598 and 600) or (num between 698 and 700) or 
+(num between 798 and 800) or (num between 898 and 900) or 
+(num between 998 and 1000)) order by c.lastname, c.firstname, classdate;
 
 
 /* TODO: improve wall of joy stuff

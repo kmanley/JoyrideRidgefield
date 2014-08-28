@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = False 
+dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
@@ -48,14 +48,17 @@ def get_lapsed(limit):
 
 def get_wallofjoy():
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_wallofjoy").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_milestonenext7").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
-		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th># Classes</th><th>As of</th></tr>")
+		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Class date</th><th>Count</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, cnt, asof = row
+			_, firstname, lastname, email, phone1, _, asof, cnt = row
 			asof = asof[:16]
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt, asof))
+			if cnt % 100 == 0:
+				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt))
+			else:
+				io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -66,12 +69,16 @@ def get_crazies():
     rows = list(conn.cursor().execute("select * from vw_doublesthisweek order by firstclass;").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
-		io.write("<tr><th>Name</th><th>Email</th><th>First</th><th>Last</th><th>Count</th></tr>")
+		io.write("<tr><th>Name</th><th>Email</th><th>First</th><th>Last</th><th>Count</th><th></th></tr>")
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, firstclass, lastclass, cnt = row
 			firstclass = firstclass[:16]
 			lastclass = lastclass[:16]
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt))
+			if firstclass == lastclass:
+				msg = "NOTE: %d spots in 1 class!" % cnt
+			else:
+				msg = ""
+			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt, msg))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -116,12 +123,12 @@ def main():
 	limit = 20
 	io = StringIO.StringIO()
 	io.write("<html><body>")
-	io.write("Good morning. You look amazing today! Here's your morning report.<br/>")
+	io.write("Good morning!<br/>")
 	io.write("<h4>Riders with birthdays in next 7 days</h4>")
 	io.write(get_birthdayriders())
 	io.write("<h4>Riders approaching Wall of Joy milestone</h4>")
 	io.write(get_wallofjoy())
-	io.write("<h4>Riders doing doubles this week</h4>")
+	io.write("<h4>Riders doing doubles this week (or booking multiple spots in a class)</h4>")
 	io.write(get_crazies())
 	io.write("<h4>Top %d riders over past 30 days</h4>" % limit)
 	io.write(get_toprecent(limit))
