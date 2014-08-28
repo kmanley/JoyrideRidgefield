@@ -295,3 +295,26 @@ where total < 0 and date(dt) >= date('now', '-7 days');
 
 
 --select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, count(*) as cnt, max(classdate) as classdate from attend a join cust c on a.custid=c.id where status='Enrolled' group by custid having (cnt > 90 and cnt <= 100) 
+
+-- get new customers as of a particular day
+select id, firstname, lastname, emailaddress, phone, phone2, datecreated, birthdate, 
+cast((julianday()-julianday(birthdate))/365.25 as int) as age, city 
+from cust 
+where date(datecreated) = date('now','-1 day');
+
+-- number of customers of each age
+create view vw_numcustbyage as select cast((julianday()-julianday(birthdate))/365.25 as int) as age, 
+count(*) as cnt from cust group by age order by age desc;
+
+-- number of customers by age bracket
+-- None, 0-20, 21-30, 31-40, 41-50, 51-60, 61-70, 70+
+select 
+  (select sum(cnt) from vw_numcustbyage where age is null) as none,
+  (select sum(cnt) from vw_numcustbyage where age between 0 and 20) as age_0_20,
+  (select sum(cnt) from vw_numcustbyage where age between 21 and 30) as age_21_30,
+  (select sum(cnt) from vw_numcustbyage where age between 31 and 40) as age_31_40,
+  (select sum(cnt) from vw_numcustbyage where age between 41 and 50) as age_41_50,
+  (select sum(cnt) from vw_numcustbyage where age between 51 and 60) as age_51_60,
+  (select sum(cnt) from vw_numcustbyage where age between 61 and 70) as age_61_70,
+  (select sum(cnt) from vw_numcustbyage where age > 70) as age_70_plus;
+  
