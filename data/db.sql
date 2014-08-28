@@ -298,18 +298,29 @@ select dt, custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, i
 from sale join cust c on sale.custid=c.id 
 where total < 0 and date(dt) >= date('now', '-7 days');
 
+drop view vw_salestypesalltime;
+create view vw_salestypesalltime as 
+select count(*) as cnt, sum(total) as ttl, typ from sale group by typ;
+
+drop view vw_salestypeslast30;
+create view vw_salestypeslast30 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale where dt >= date('now', '-30 days') group by typ;
+
+drop view vw_salestypeslast7;
+create view vw_salestypeslast7 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale where dt >= date('now', '-7 days') group by typ;
+
 
 --select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, count(*) as cnt, max(classdate) as classdate from attend a join cust c on a.custid=c.id where status='Enrolled' group by custid having (cnt > 90 and cnt <= 100) 
 
 -- get new customers as of a particular day
-select id, firstname, lastname, emailaddress, phone, phone2, datecreated, birthdate, 
-cast((julianday()-julianday(birthdate))/365.25 as int) as age, city 
-from cust 
+select id, firstname, lastname, emailaddress, phone, phone2, datecreated, birthdate, age, city
+from vw_cust
 where date(datecreated) = date('now','-1 day');
 
 -- number of customers of each age
-create view vw_numcustbyage as select cast((julianday()-julianday(birthdate))/365.25 as int) as age, 
-count(*) as cnt from cust group by age order by age desc;
+drop view vw_numcustbyage;
+create view vw_numcustbyage as select age, count(*) as cnt from vw_cust group by age order by age desc;
 
 -- number of customers by age bracket
 -- None, 0-20, 21-30, 31-40, 41-50, 51-60, 61-70, 70+
@@ -338,3 +349,21 @@ select '60-69', sum(cnt) from vw_numcustbyage where age between 60 and 69 union 
 select '70+', sum(cnt) from vw_numcustbyage where age >= 70;
 
 -- TODO: number of rides by age range
+
+drop view vw_numridesbyage;
+create view vw_numridesbyage
+as
+select c.age, count(*) as cnt from attend a join vw_cust c on a.custid=c.id where a.status='Enrolled' group by c.age order by c.age;
+
+create view vw_numridesbyagerange
+as
+select 'no age', sum(cnt) from vw_numridesbyage where age is null union all
+select '0-12', sum(cnt) from vw_numridesbyage where age between 0 and 12 union all
+select '13-19', sum(cnt) from vw_numridesbyage where age between 13 and 19 union all
+select '20-29', sum(cnt) from vw_numridesbyage where age between 20 and 29 union all
+select '30-39', sum(cnt) from vw_numridesbyage where age between 30 and 39 union all
+select '40-49', sum(cnt) from vw_numridesbyage where age between 40 and 49 union all
+select '50-59', sum(cnt) from vw_numridesbyage where age between 50 and 59 union all
+select '60-69', sum(cnt) from vw_numridesbyage where age between 60 and 69 union all
+select '70+', sum(cnt) from vw_numridesbyage where age >= 70;
+
