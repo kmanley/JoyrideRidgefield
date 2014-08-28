@@ -64,6 +64,7 @@ classtype string,
 inst string,
 room string,
 cost float,
+num int,
 primary key (id)
 );
 
@@ -209,10 +210,21 @@ or (cnt > 790 and cnt <= 800) or (cnt > 890 and cnt <= 900) or (cnt > 990 and cn
 order by cnt desc;
 
 
+/* TODO: improve wall of joy stuff
+sqlite> create index idx_attend_classdate on attend(classdate);sqlite> select id, firstname, lastname, classdate, (select count(*) from attend a2 where status='Enrolled' and a2.custid=a.custid and a2.classdate<=a.classdate) as num from attend a where a.classdate between date('now','-7 days') and date('now','+7 days') and status='Enrolled' and (num between 95 and 100) or (num between 195 and 200) or (num between 295 and 300) or (num between 395 and 400) or (num between 495 and 500) or (num between 595 and 600) order by lastname, firstname, classdate;
+^CError: interrupted
+sqlite> create table temp as select id, firstname, lastname, classdate, (select count(*) from attend a2 where status='Enrolled' and a2.custid=a.custid and a2.classdate<=a.classdate) as num from attend a;^CError: interrupted
+sqlite> create table temp as select id, firstname, lastname, classdate, (select count(*) from attend a2 where status='Enrolled' and a2.custid=a.custid and a2.classdate<=a.classdate) as num from attend a where date(a.classdate) between date('now','-7 days') and date('now','+7 days') and status='Enrolled';
+sqlite> select * from temp;
+
+*/
+
 --select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
 
 
 --create view v_totalsalesbyitem as select item, sum(total) from sale group by item order by sum(total) desc;
+
+--TODO: create new customers query too
 
 drop view vw_customersalesalltime;
 create view vw_customersalesalltime as 
@@ -282,3 +294,4 @@ from sale join cust c on sale.custid=c.id
 where total < 0 and date(dt) >= date('now', '-7 days');
 
 
+--select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, count(*) as cnt, max(classdate) as classdate from attend a join cust c on a.custid=c.id where status='Enrolled' group by custid having (cnt > 90 and cnt <= 100) 
