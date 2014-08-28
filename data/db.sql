@@ -35,6 +35,11 @@ weight float,
 primary key (id)
 );
 
+create view vw_cust
+as
+select *, cast((julianday()-julianday(birthdate))/365.25 as int) as age
+from cust;
+
 create table sale (
 dt datetime,
 custid int,
@@ -308,6 +313,7 @@ count(*) as cnt from cust group by age order by age desc;
 
 -- number of customers by age bracket
 -- None, 0-20, 21-30, 31-40, 41-50, 51-60, 61-70, 70+
+/*
 select 
   (select sum(cnt) from vw_numcustbyage where age is null) as none,
   (select sum(cnt) from vw_numcustbyage where age between 0 and 20) as age_0_20,
@@ -317,4 +323,18 @@ select
   (select sum(cnt) from vw_numcustbyage where age between 51 and 60) as age_51_60,
   (select sum(cnt) from vw_numcustbyage where age between 61 and 70) as age_61_70,
   (select sum(cnt) from vw_numcustbyage where age > 70) as age_70_plus;
-  
+*/
+
+create view vw_numcustbyagerange 
+as
+select 'no birthday', sum(cnt) from vw_numcustbyage where age is null union all
+select '0-12', sum(cnt) from vw_numcustbyage where age between 0 and 12 union all
+select '13-19', sum(cnt) from vw_numcustbyage where age between 13 and 19 union all
+select '20-29', sum(cnt) from vw_numcustbyage where age between 20 and 29 union all
+select '30-39', sum(cnt) from vw_numcustbyage where age between 30 and 39 union all
+select '40-49', sum(cnt) from vw_numcustbyage where age between 40 and 49 union all
+select '50-59', sum(cnt) from vw_numcustbyage where age between 50 and 59 union all
+select '60-69', sum(cnt) from vw_numcustbyage where age between 60 and 69 union all
+select '70+', sum(cnt) from vw_numcustbyage where age >= 70;
+
+-- TODO: number of rides by age range
