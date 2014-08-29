@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = True
+dryRun = False
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
