@@ -21,8 +21,8 @@ r = requests.get("http://www.%s/admin/" % baseurl, allow_redirects=True)
 cookies = r.cookies
 formdata = {'action': 'Sec.doLogin', 'username': username, 'password':password}
 r = requests.post("http://www.%s/admin/index.cfm?action=" % baseurl, data=formdata, cookies=cookies, allow_redirects=False)
-r = requests.get("http://www.%s/admin/index.cfm?action=Booker.home" % baseurl, cookies=cookies)
-
+r = requests.get("http://www.%s/admin/index.cfm?action=Booker.view&roomid=1" % baseurl, cookies=cookies)
+#open("/tmp/autotweet.html","w").write(r.text) 
 soup = BS(r.text)
 lis = soup.findAll("li", attrs={"class":"nav-header"})
 found = False
