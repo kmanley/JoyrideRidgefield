@@ -70,9 +70,9 @@ inst string,
 room string,
 cost float,
 num int,
+totnum int,
 primary key (id)
 );
-
 
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
@@ -205,6 +205,13 @@ group by custid having cnt % 50 = 0
 order by cnt desc;
 */
 
+select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, 
+count(*) as cnt, max(classdate) as maxclassdate 
+from attend a join cust c on a.custid=c.id 
+where status='Enrolled' 
+having date(maxclassdate)<=date('now','+10 day') 
+
+
 -- see who's getting close to a multiple of 100
 /*
 drop view vw_wallofjoy;
@@ -224,11 +231,16 @@ create view vw_milestonenext7
 as
 select custid, c.firstname, c.lastname, c.emailaddress, phone, phone2, classdate, num 
 from attend join cust c on attend.custid=c.id 
-where classdate between date('now') and date('now','+7 days') and ((num between 98 and 100) or (num between 198 and 200) or 
-(num between 298 and 300) or (num between 398 and 400) or (num between 498 and 500) 
-or (num between 598 and 600) or (num between 698 and 700) or 
-(num between 798 and 800) or (num between 898 and 900) or 
-(num between 998 and 1000)) order by c.lastname, c.firstname, classdate;
+where classdate between date('now') and date('now','+7 days') and ((num between 95 and 100) or (num between 195 and 200) or 
+(num between 295 and 300) or (num between 395 and 400) or (num between 495 and 500) 
+or (num between 595 and 600) or (num between 695 and 700) or 
+(num between 795 and 800) or (num between 895 and 900) or 
+(num between 995 and 1000)) order by c.lastname, c.firstname, classdate;
+
+/* TODO:
+sqlite> select firstname, lastname, max(classdate) as maxclassdate, max(num) as maxnum from attend group by custid having maxclassdate < date('now') and maxnum between 97 and 100 union all select firstname, lastname, classdate, num from attend where classdate between date('now') and date('now','+8 days') and num between 97 and 100 order by lastname, firstname, classdate;
+
+*/
 
 
 /* TODO: improve wall of joy stuff
@@ -333,6 +345,13 @@ select count(*) as cnt, sum(total) as ttl, typ from sale where dt >= date('now',
 select id, firstname, lastname, emailaddress, phone, phone2, datecreated, birthdate, age, city
 from vw_cust
 where date(datecreated) = date('now','-1 day');
+
+-- TODO: new riders who haven't signed up for a class yet
+-- TODO: need to exclude fashion show people
+sqlite> select c.id, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, c.datecreated, a.classdate from cust c left outer join attend a on c.id=a.custid where date(datecreated) > date('now', '-7 days') and classdate is null;
+
+-- TODO: fashion show counts
+
 
 -- number of customers of each age
 drop view vw_numcustbyage;
