@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = False
+dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
@@ -64,6 +64,24 @@ def get_wallofjoy():
 		io.write("None")
     return io.getvalue()
 
+def get_studiomilestones():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_studiomilestonenext7").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Class date</th><th>Rider Count</th><th>Studio Count</th></tr>")
+		for i, row in enumerate(rows):
+			_, firstname, lastname, email, phone1, _, asof, ridercnt, studiocnt = row
+			asof = asof[:16]
+			if studiocnt % 10000 == 0:
+				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt))
+			else:
+				io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
 def get_crazies():
     io = StringIO.StringIO()
     rows = list(conn.cursor().execute("select * from vw_doublesthisweek order by firstclass;").fetchall())
@@ -87,13 +105,13 @@ def get_crazies():
 
 def get_birthdayriders():
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_birthdaysthisweek where classdate is not null").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_birthdaysthisweek v1 where v1.classdate is not null and v1.ndays = (select min(v2.ndays) from vw_birthdaysthisweek v2 where v2.id=v1.id);").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Birthday</th><th>Riding on</th></tr>")
 		for i, row in enumerate(rows):
 			#birthdate is actual historical day, birthday is that day this year
-			_, firstname, lastname, email, phone1, _, birthdate, birthday, classday = row
+			_, firstname, lastname, email, phone1, _, birthdate, birthday, classday, _ = row
 			birthdate = birthdate[:10]
 			classday = classday[:16]
 			if birthday[:10] == classday[:10]:
@@ -126,7 +144,9 @@ def main():
 	io.write("Good morning!<br/>")
 	io.write("<h4>Riders with birthdays in next 7 days</h4>")
 	io.write(get_birthdayriders())
-	io.write("<h4>Riders approaching Wall of Joy milestone</h4>")
+	io.write("<h4>Total studio rides (celebrate milestones like 20k, 30k, etc)</h4>")
+	io.write(get_studiomilestones())
+	io.write("<h4>Riders approaching Wall of Joy 100-ride milestone</h4>")
 	io.write(get_wallofjoy())
 	io.write("<h4>Riders doing doubles this week (or booking multiple spots in a class)</h4>")
 	io.write(get_crazies())
