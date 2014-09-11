@@ -107,7 +107,8 @@ from cust;
 drop view vw_birthdaysthisweek;
 create view vw_birthdaysthisweek
 as
-select b.id, b.firstname, b.lastname, b.emailaddress, b.phone, b.phone2, b.birthdate, b.birthday, a.classdate 
+select b.id, b.firstname, b.lastname, b.emailaddress, b.phone, b.phone2, b.birthdate, b.birthday, a.classdate, 
+    round(abs(julianday(a.classdate)-julianday(b.birthday))) as ndays
 from vw_birthday b left outer join attend a on b.id=a.custid and (a.classdate >= date('now') and a.classdate <= date('now', '+7 days'))
 where birthday >= date('now') and birthday <= date('now', '+7 days') order by birthday;
 
@@ -145,6 +146,11 @@ date('now', '+1 days') as end
 from attend join cust on attend.custid=cust.id where status='Enrolled' and 
 	classdate >=start and classdate <= end group by custid;
 
+create view vw_attendlast31 as select custid, attend.firstname, attend.lastname, attend.emailaddress, 
+phone, phone2, count(*) as cnt, date('now','-31 days') as start, 
+date('now', '+7 days') as end 
+from attend join cust on attend.custid=cust.id where status='Enrolled' and 
+	classdate >=start and classdate <= end group by custid;
 
 --note: we add 7 days here because the person might have future bookings; don't want to consider someone lapsed if they have lots of future bookings
 	--drop view vw_attendlast30;
@@ -194,6 +200,16 @@ v1.cnt as prev30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v
 where prev30 > 0 and v2.cnt is null 
 order by prev30 desc;
 
+drop view vw_riderslapsedtoday;
+create view vw_riderslapsedtoday as 
+select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2,
+v1.cnt as prev30 
+from vw_attendprev30 v1 
+  left outer join vw_attendlast31 v2 on v1.custid=v2.custid 
+  left outer join vw_attendlast30 v3 on v1.custid=v3.custid 
+where prev30 > 0 and v2.cnt is not null and v3.cnt is null 
+order by prev30 desc;
+
 -- list upcoming milestone riders (multiple of 50)
 /*
 drop view vw_milestone;
@@ -236,6 +252,15 @@ where classdate between date('now') and date('now','+7 days') and ((num between 
 or (num between 595 and 600) or (num between 695 and 700) or 
 (num between 795 and 800) or (num between 895 and 900) or 
 (num between 995 and 1000)) order by c.lastname, c.firstname, classdate;
+
+drop view vw_studiomilestonenext7;
+create view vw_studiomilestonenext7
+as
+select custid, c.firstname, c.lastname, c.emailaddress, phone, phone2, classdate, num, totnum 
+from attend join cust c on attend.custid=c.id 
+where classdate between date('now') and date('now','+7 days') and totnum % 100 = 0
+order by totnum;
+
 
 /* TODO:
 sqlite> select firstname, lastname, max(classdate) as maxclassdate, max(num) as maxnum from attend group by custid having maxclassdate < date('now') and maxnum between 97 and 100 union all select firstname, lastname, classdate, num from attend where classdate between date('now') and date('now','+8 days') and num between 97 and 100 order by lastname, firstname, classdate;
