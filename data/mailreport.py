@@ -156,7 +156,7 @@ def main():
 	io.write("Good morning!<br/>")
 	io.write("<h4>Customers taking their first ride today (help them out!)</h4>")
 	io.write(get_firsttimers('-0 days'))
-	io.write("<h4>Customers who tooke their first ride yesterday (follow up--did they like it? want to buy a package?)</h4>")
+	io.write("<h4>Customers who took their first ride yesterday (follow up--did they like it? want to buy a package?)</h4>")
 	io.write(get_firsttimers('-1 days'))
 	io.write("<h4>Riders with birthdays in next 7 days</h4>")
 	io.write(get_birthdayriders())
