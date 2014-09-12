@@ -10,6 +10,18 @@ TODAY = datetime.date.today()
 
 conn = sqlite3.connect("joyridge.dat")
 
+def get_firsttimers(offset=""):
+    io = StringIO.StringIO()
+    rows = conn.cursor().execute("select c.id, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, a.classdate from attend a join cust c on a.custid=c.id  where a.num=1 and date(a.classdate)=date('now', 'localtime', '%s') order by classdate;" % offset).fetchall()
+    io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+    io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>First class</th></tr>")
+    for i, row in enumerate(rows):
+		_, firstname, lastname, email, phone1, _, classdate = row
+		classdate = classdate[:16]
+		io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate))
+    io.write("</table>")
+    return io.getvalue()
+
 def get_toprecent(limit):
     io = StringIO.StringIO()
     rows = conn.cursor().execute("select * from vw_attendlast30 order by cnt desc limit ?", (limit,)).fetchall()
@@ -34,7 +46,7 @@ def get_trending(direction, limit):
 
 def get_lapsed(limit):
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_riderslapsed limit ?", (limit,)).fetchall())
+    rows = list(conn.cursor().execute("select * from vw_riderslapsedtoday").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>T-60 to T-30</th><th>T-30 to T-0</th></tr>")
@@ -142,6 +154,10 @@ def main():
 	io = StringIO.StringIO()
 	io.write("<html><body>")
 	io.write("Good morning!<br/>")
+	io.write("<h4>Customers taking their first ride today (help them out!)</h4>")
+	io.write(get_firsttimers('-0 days'))
+	io.write("<h4>Customers who tooke their first ride yesterday (follow up--did they like it? want to buy a package?)</h4>")
+	io.write(get_firsttimers('-1 days'))
 	io.write("<h4>Riders with birthdays in next 7 days</h4>")
 	io.write(get_birthdayriders())
 	io.write("<h4>Total studio rides (celebrate milestones like 20k, 30k, etc)</h4>")
@@ -156,7 +172,7 @@ def main():
 	io.write(get_trending("up", limit))
 	io.write("<h4>Top %d down-trending riders over past 30 days</h4>" % limit)
 	io.write(get_trending("down", limit))
-	io.write("<h4>Top %d riders lapsed in past 30 days</h4>" % limit)
+	io.write("<h4>Riders lapsed as of today. Please contact them!</h4>")
 	io.write(get_lapsed(limit))
 	io.write("<br/>Best regards,<br/>JoyRide Robot")
 	io.write("</body></html>")

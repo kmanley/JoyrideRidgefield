@@ -3,6 +3,10 @@
 .import /home/.../file.csv <tablename>
 */
 
+/* TODO: NOTE: should be forcing localtime, currently getting UTC
+select date('now', 'localtime', '-1 day');
+*/
+
 create table cust (
 emailaddress string, 
 firstname string,

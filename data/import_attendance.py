@@ -56,7 +56,7 @@ def main(csvfile):
 	for i, row in enumerate(rows):
 		custid = row[idx_custid]
 		status = row[idx_status]
-		print custid, status
+		#print custid, status
 		enrolled.setdefault(custid, 0)
 		if status == "Enrolled":
 			enrolled[custid] = enrolled[custid] + 1
