@@ -140,8 +140,8 @@ def get_birthdayriders():
     return io.getvalue()
 
 
-def send_report(report, subj, recips): 
-	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com'],
+def send_report(report, subj, recips=None): 
+	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
 	    to_addr=recips,
@@ -178,7 +178,7 @@ def fashionshow_sales():
 		io.write("None")
 	io.write("</body></html>")
 	#open(r"/tmp/test2.html", "w").write(io.getvalue())
-	send_report(io.getvalue(), "Joy of Art sales: %d General, %d VIP, %d Total" % (genl, vip, total),
+	send_report(io.getvalue(), "Joy of Art sales: %d General, %d VIP, %d Total" % (genl, vip, total), 
 	              ['kevin@joyrideridgefield.com', 'amypal@joyrideridgefield.com'])
 
 def rider_report():

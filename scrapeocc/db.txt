@@ -10,5 +10,17 @@ select date(dt), site, avg(pct) from v_occ group by date(dt), site;
 or
 select * from v_date where dt='2014-07-08';
 
+/* TODO: aggregate stats over different time periods
+
+sqlite> 
+sqlite> select site, sum(cnt) as ttlcnt, sum(unavail) as ttlunavail, sum(total) as ttltotal from v_date
+   ...> group by site where dt between date('now', '-7 days') and date('now');
+Error: near "where": syntax error
+sqlite> select site, sum(cnt) as ttlcnt, sum(unavail) as ttlunavail, sum(total) as ttltotal from v_date
+   ...> where dt between date('now', '-7 days') and date('now') group by site order by site;
+sqlite> 
+sqlite> where dt between date('now', '-60 days') and date('now') group by site order by site;
+Error: near "where": syntax error
 
 
+*/

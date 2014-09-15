@@ -65,7 +65,7 @@ lastname string,
 emailaddress string,
 status string,
 spot int,
-datein datetime,
+datein datetime,b
 seriesid int,
 series string,
 classdate datetime,
