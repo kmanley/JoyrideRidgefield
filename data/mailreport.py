@@ -8,7 +8,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-dryRun = False
+dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
@@ -75,7 +75,7 @@ def get_stalled():
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, phone1, _, dt = row
 			dt = dt[:16]
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, dt))
+			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname.encode("ascii", "replace") + " " + lastname, email, phone1, dt))
 		io.write("</table>")
     else:
 		io.write("None")

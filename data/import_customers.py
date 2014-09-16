@@ -29,7 +29,7 @@ def main(csvfile):
 			print repr(cols), "has %d cols" % len(cols)
 			return
 			sys.exit(2)
-		cols = [unicode(col[1:-1] if col.startswith('"') else col, encoding="latin-1") for col in cols]
+		cols = [unicode(col[1:-1] if col.startswith('"') else col, encoding="utf-8") for col in cols]
 		#print cols
 		curs.execute("insert into cust values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 	             tuple(cols))
