@@ -48,7 +48,7 @@ def get_trending(direction, limit):
     io.write("</table>")
     return io.getvalue()
 
-def get_lapsed(limit):
+def get_lapsed():
     io = StringIO.StringIO()
     rows = list(conn.cursor().execute("select * from vw_riderslapsedtoday").fetchall())
     if rows:
@@ -57,6 +57,25 @@ def get_lapsed(limit):
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, phone1, _, prev = row
 			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, 0))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+def get_stalled():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select c.id, c.firstname, c.lastname, c.emailaddress, c.phone, " +
+                                      "c.phone2, c.datecreated from cust c left outer join attend a " + 
+                                      "on c.id=a.custid and a.status='Enrolled' where date(c.datecreated) " +
+                                      "= date('now', '-9 days') and a.classdate is null and c.id not " +
+                                      "in (select id from vw_fashionshowcusts) order by datecreated;").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Account Created</th></tr>")
+		for i, row in enumerate(rows):
+			_, firstname, lastname, email, phone1, _, dt = row
+			dt = dt[:16]
+			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, dt))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -118,7 +137,6 @@ def get_crazies():
 		io.write("None")
     return io.getvalue()
 
-
 def get_birthdayriders():
     io = StringIO.StringIO()
     rows = list(conn.cursor().execute("select * from vw_birthdaysthisweek v1 where v1.classdate is not null and v1.ndays = (select min(v2.ndays) from vw_birthdaysthisweek v2 where v2.id=v1.id);").fetchall())
@@ -139,7 +157,6 @@ def get_birthdayriders():
 		io.write("None")
     return io.getvalue()
 
-
 def send_report(report, subj, recips=None): 
 	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
@@ -154,59 +171,54 @@ def send_report(report, subj, recips=None):
 	envelope.send('smtp.googlemail.com', login=secrets[0], password=secrets[1],
 					tls=True, port=587)
 
-def fashionshow_sales():
-	# quick hack to keep an eye on fashion show
-	rows = list(conn.cursor().execute("select count(*)  from sale where item='VIP Ticket' and total='75.0';").fetchall())
-	vip = rows[0][0]
-	rows = list(conn.cursor().execute("select count(*)  from sale where item='General Admission' and total='50.0';").fetchall())
-	genl = rows[0][0]
-	total = genl + vip
-	
-	io = StringIO.StringIO()
-	io.write("<html><body>")
-	rows = list(conn.cursor().execute("select firstname, lastname, item, total, dt, pmtype from sale where (item='VIP Ticket' and total='75.0') or (item='General Admission' and total='50.0') order by lastname, firstname;").fetchall())
-	if rows:
-		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
-		io.write("<tr><th>#</th><th>First name</th><th>Last Name</th><th>Ticket</th><th>Price</th><th>Purch Dt</th><th>Pmt Method</th></tr>")
-		for i, row in enumerate(rows):
-			firstname, lastname, item, price, dt, pmtype = row
-			dt = dt[:16]
-			io.write("<tr><td align='right'>%d</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%s</td><td>%s</td><td>%s</td></tr>" % \
-			    (i+1, firstname, lastname, item, price, dt, pmtype))
-		io.write("</table>")
-	else:
-		io.write("None")
-	io.write("</body></html>")
-	#open(r"/tmp/test2.html", "w").write(io.getvalue())
-	send_report(io.getvalue(), "Joy of Art sales: %d General, %d VIP, %d Total" % (genl, vip, total), 
-	              ['kevin@joyrideridgefield.com', 'amypal@joyrideridgefield.com'])
-
 def rider_report():
 	limit = 20
 	io = StringIO.StringIO()
 	io.write("<html><body>")
-	io.write("Good morning!<br/>")
-	io.write("<h4>Customers taking their first ride today (help them out!)</h4>")
+	io.write("<h3 style='margin:0px;'>Customers taking their first ride today</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: be sure to welcome them and give them any extra help they need</h4>")
 	io.write(get_firsttimers('-0 days'))
-	io.write("<h4>Customers who took their first ride yesterday (follow up--did they like it? want to buy a package?)</h4>")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Customers who took their first ride yesterday</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: contact them <u>today</u>, get feedback, offer to sign them up for another class</h4>")
 	io.write(get_firsttimers('-1 days'))
-	io.write("<h4>Riders with birthdays in next 7 days</h4>")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Riders with birthdays in next 7 days</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: say Happy Birthday and tell them about birthday promotion</h4>")
 	io.write(get_birthdayriders())
-	io.write("<h4>Total studio rides (celebrate milestones like 20k, 30k, etc)</h4>")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Total studio rides</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: celebrate every 10,000th studio ride on social media</h4>")
 	io.write(get_studiomilestones())
-	io.write("<h4>Riders approaching Wall of Joy 100-ride milestone</h4>")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Riders approaching Wall of Joy 100-ride milestone</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: celebrate every 100th customer rides on social media</h4>")
 	io.write(get_wallofjoy())
-	io.write("<h4>Riders doing doubles this week (or booking multiple spots in a class)</h4>")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Riders doing doubles this week (or booking multiple spots in a class)</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: hat tip to double-riders; please investigate/correct multiple bookings under same name</h4>")
 	io.write(get_crazies())
-	io.write("<h4>Top %d riders over past 30 days</h4>" % limit)
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Top %d riders over past 30 days</h3>" % limit)
+	io.write("<h4 style='margin:0px;'>ACTION: extra care & attention; these are our best riders lately</h4>")	
 	io.write(get_toprecent(limit))
-	io.write("<h4>Top %d up-trending riders over past 30 days</h4>" % limit)
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Top %d up-trending riders over past 30 days</h3>" % limit)
+	io.write("<h4 style='margin:0px;'>ACTION: let them know you've noticed how hard they're working</h4>")		
 	io.write(get_trending("up", limit))
-	io.write("<h4>Top %d down-trending riders over past 30 days</h4>" % limit)
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Top %d down-trending riders over past 30 days</h3>" % limit)
+	io.write("<h4 style='margin:0px;'>ACTION: encourage them, if possible determine if there are any problems/issues</h4>")	
 	io.write(get_trending("down", limit))
-	io.write("<h4>Riders lapsed as of today. Please contact them!</h4>")
-	io.write(get_lapsed(limit))
-	io.write("<br/>Best regards,<br/>JoyRide Robot")
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>Riders lapsed as of today</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: contact them <u>today</u>, determine if any problems/issues, try to win back their business</h4>")	
+	io.write(get_lapsed())
+	io.write("<p/>")
+	io.write("<h3 style='margin:0px;'>New customers who never enrolled in a class</h3>")
+	io.write("<h4 style='margin:0px;'>ACTION: contact them <u>today</u>, try to sign them up for a class</h4>")	
+	io.write(get_stalled())
+	io.write("<p/>Best regards,<br/>JoyRide Robot")
 	io.write("</body></html>")
 	if dryRun:
 		with open("/tmp/test.html","wb") as fp:
@@ -216,4 +228,3 @@ def rider_report():
 
 if __name__ == "__main__":
     rider_report()
-    fashionshow_sales()

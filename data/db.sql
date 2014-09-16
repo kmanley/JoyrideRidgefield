@@ -283,6 +283,16 @@ sqlite> select * from temp;
 
 --select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
 
+drop view vw_fashionshowcusts;
+create view vw_fashionshowcusts
+as
+select distinct c.id, c.firstname, c.lastname from cust c join sale s on s.custid=c.id and s.item in ('General Admission', 'VIP Ticket');
+
+-- as of 15 sep 14 - 323 people who created an acct but never took a class (excluding fashion show ticket buyers)
+select count(*) from cust c left outer join attend a on c.id=a.custid and a.status='Enrolled' 
+where date(c.datecreated) >= date('now', '-360 days') and a.classdate is null 
+and c.id not in (select id from vw_fashionshowcusts) order by datecreated;
+
 
 --create view v_totalsalesbyitem as select item, sum(total) from sale group by item order by sum(total) desc;
 
@@ -307,6 +317,8 @@ create view vw_customersaleslast7 as
 select custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, sum(total) as total 
 from sale join cust c on sale.custid=c.id 
 where pmtype != 'Comp' and date(dt) >= date('now', '-7 days')
+
+
 group by custid order by total desc;
 
 drop view vw_itemsaleslastalltime;
