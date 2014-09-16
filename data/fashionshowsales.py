@@ -14,6 +14,19 @@ TODAY = datetime.date.today()
 
 conn = sqlite3.connect("joyridge.dat")
 
+def send_report(report, subj, recips): 
+	envelope = Envelope(
+	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
+	    to_addr=recips,
+	    subject=subj,
+	    html_body=report
+	)
+
+	log.info("sending email '%s' to '%s'" % (subj, repr(recips)))
+	# Send the envelope using an ad-hoc connection...
+	envelope.send('smtp.googlemail.com', login=secrets[0], password=secrets[1],
+					tls=True, port=587)
+
 def fashionshow_sales():
 	# quick hack to keep an eye on fashion show
 	rows = list(conn.cursor().execute("select count(*)  from sale where item='VIP Ticket' and total='75.0';").fetchall())
