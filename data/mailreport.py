@@ -67,7 +67,7 @@ def get_stalled():
     rows = list(conn.cursor().execute("select c.id, c.firstname, c.lastname, c.emailaddress, c.phone, " +
                                       "c.phone2, c.datecreated from cust c left outer join attend a " + 
                                       "on c.id=a.custid and a.status='Enrolled' where date(c.datecreated) " +
-                                      "= date('now', '-9 days') and a.classdate is null and c.id not " +
+                                      "= date('now', '-7 days') and a.classdate is null and c.id not " +
                                       "in (select id from vw_fashionshowcusts) order by datecreated;").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
