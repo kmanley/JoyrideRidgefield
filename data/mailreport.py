@@ -8,7 +8,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-dryRun = True
+dryRun = False
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
