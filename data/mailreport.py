@@ -22,7 +22,7 @@ def get_firsttimers(offset=""):
     for i, row in enumerate(rows):
 		_, firstname, lastname, email, phone1, _, classdate = row
 		classdate = classdate[:16]
-		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate)).encode('ascii', 'replace'))
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -33,7 +33,7 @@ def get_toprecent(limit):
     io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th># Rides</th></tr>")
     for i, row in enumerate(rows):
 		_, firstname, lastname, email, phone1, _, cnt, frm, to = row
-		io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt))
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -44,7 +44,7 @@ def get_trending(direction, limit):
     io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>T-60 to T-30</th><th>T-30 to T-0</th></tr>")
     for i, row in enumerate(rows):
 		_, firstname, lastname, email, phone1, _, prev, last = row
-		io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, last))
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, last)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -56,7 +56,7 @@ def get_lapsed():
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>T-60 to T-30</th><th>T-30 to T-0</th></tr>")
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, phone1, _, prev = row
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, 0))
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, 0)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -75,7 +75,7 @@ def get_stalled():
 		for i, row in enumerate(rows):
 			_, firstname, lastname, email, phone1, _, dt = row
 			dt = dt[:16]
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname.encode("ascii", "replace") + " " + lastname, email, phone1, dt))
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname.encode("ascii", "replace") + " " + lastname, email, phone1, dt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -91,9 +91,9 @@ def get_wallofjoy():
 			_, firstname, lastname, email, phone1, _, asof, cnt = row
 			asof = asof[:16]
 			if cnt % 100 == 0:
-				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt)).encode('utf-8', 'replace'))
 			else:
-				io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt))
+				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -109,9 +109,9 @@ def get_studiomilestones():
 			_, firstname, lastname, email, phone1, _, asof, ridercnt, studiocnt = row
 			asof = asof[:16]
 			if studiocnt % 10000 == 0:
-				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
 			else:
-				io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt))
+				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -131,7 +131,7 @@ def get_crazies():
 				msg = "NOTE: %d spots in 1 class!" % cnt
 			else:
 				msg = ""
-			io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt, msg))
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt, msg)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -149,9 +149,9 @@ def get_birthdayriders():
 			birthdate = birthdate[:10]
 			classday = classday[:16]
 			if birthday[:10] == classday[:10]:
-				io.write("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
 			else:
-			    io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday))
+			    io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -161,7 +161,8 @@ def send_report(report, subj, recips=None):
 	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    to_addr=recips,
+	    #to_addr=recips,
+	    to_addr = ['kevin.manley@gmail.com',],
 	    subject=subj,
 	    html_body=report
 	)
