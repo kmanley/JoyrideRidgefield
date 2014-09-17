@@ -22,7 +22,7 @@ def get_firsttimers(offset=""):
     for i, row in enumerate(rows):
 		_, firstname, lastname, email, phone1, _, classdate = row
 		classdate = classdate[:16]
-		io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate))
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate)).encode('ascii', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
