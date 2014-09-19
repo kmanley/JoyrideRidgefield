@@ -161,8 +161,7 @@ def send_report(report, subj, recips=None):
 	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    #to_addr=recips,
-	    to_addr = ['kevin.manley@gmail.com',],
+	    to_addr=recips,
 	    subject=subj,
 	    html_body=report
 	)
