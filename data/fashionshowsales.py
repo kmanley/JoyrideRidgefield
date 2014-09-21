@@ -22,7 +22,7 @@ def send_report(report, subj, recips):
 	    html_body=report
 	)
 
-	log.info("sending email '%s' to '%s'" % (subj, repr(recips)))
+	log.info("sending email '%s' to %s" % (subj, repr(recips)))
 	# Send the envelope using an ad-hoc connection...
 	envelope.send('smtp.googlemail.com', login=secrets[0], password=secrets[1],
 					tls=True, port=587)
@@ -51,10 +51,11 @@ def fashionshow_sales():
 		io.write("None")
 	io.write("</body></html>")
 	if dryRun:
+		print "writing /tmp/test_fashionshowsales.html"
 		open(r"/tmp/test_fashionshowsales.html", "w").write(io.getvalue())
 	else:
 		send_report(io.getvalue(), "Joy of Art sales: %d General, %d VIP, %d Total" % (genl, vip, total), 
-	              ['kevin@joyrideridgefield.com', 'amypal@joyrideridgefield.com'])
+	              ('kevin.manley@gmail.com', 'amypal@joyrideridgefield.com'))
 
 if __name__ == "__main__":
     fashionshow_sales()
