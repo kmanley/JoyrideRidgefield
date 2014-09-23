@@ -317,13 +317,55 @@ from cust;
 drop view vw_activecustomerslast30;
 create view vw_activecustomerslast30 as
 select * from vw_lastsaleorclass
-where (date(lastsale) >= date('now', '-30 days')) or (date(lastattend) >= date('now', '-30 days'));
+where (date(lastsale) >= date('now', '-29 days')) or (date(lastattend) >= date('now', '-29 days'));
 
 drop view vw_activecustomersprev30;
 create view vw_activecustomersprev30 as
 select * from vw_lastsaleorclass
-where (date(lastsale) between date('now', '-60 days') and date('now', '-30 days')) 
-or (date(lastattend) between date('now', '-60 days') and date('now', '-30 days'));
+where (date(lastsale) between date('now', '-59 days') and date('now', '-30 days')) 
+or (date(lastattend) between date('now', '-59 days') and date('now', '-30 days'));
+
+drop view vw_statsbyclass;
+create view vw_statsbyclass 
+as
+select inst, classdate, count(*) as numriders from attend 
+group by inst, classdate;
+
+drop view vw_statsbyinstrlast7;
+create view vw_statsbyinstrlast7
+as
+select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
+  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+from vw_statsbyclass
+where date(classdate) between date('now', '-7 days') and date('now', '-1 days')
+group by inst;
+
+drop view vw_statsbyinstrprev7;
+create view vw_statsbyinstrprev7
+as
+select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
+  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+from vw_statsbyclass
+where date(classdate) between date('now', '-14 days') and date('now', '-8 days')
+group by inst;
+
+drop view vw_statsbyinstrlast30;
+create view vw_statsbyinstrlast30
+as
+select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
+  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+from vw_statsbyclass
+where date(classdate) between date('now', '-30 days') and date('now', '-1 days')
+group by inst;
+
+drop view vw_statsbyinstrprev30;
+create view vw_statsbyinstrprev30
+as
+select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
+  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+from vw_statsbyclass
+where date(classdate) between date('now', '-60 days') and date('now', '-31 days')
+group by inst;
 
 
 
