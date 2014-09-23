@@ -94,7 +94,7 @@ select sum(total) from v_sale group by dt order by date desc;
 /*
 select strftime('%Y-%m',dt) as yymm, lower(city) as cty, sum(total) as ttl 
 from v_sale 
-where cty in ('ridgefield','wilton') 
+where cty in ('thomaston') --('ridgefield','wilton') 
 group by yymm, cty 
 having ttl>0 
 order by yymm,cty;
@@ -281,6 +281,12 @@ sqlite> select * from temp;
 
 */
 
+-- TODO: make sure all indexes are applied in prod
+create index idx_sale_custid on sale(custid);
+create index idx_attend_custid on attend(custid);
+
+
+
 --select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
 
 drop view vw_fashionshowcusts;
@@ -298,11 +304,35 @@ and c.id not in (select id from vw_fashionshowcusts) order by datecreated;
 
 --TODO: create new customers query too
 
+
+drop view vw_lastsaleorclass;
+create view vw_lastsaleorclass as
+select cust.*, (select max(dt) from sale where sale.custid=cust.id and pmtype != 'Comp') as lastsale, 
+-- NOTE: I'm using lastattend here instead of cust.lastclass, since I'm not sure if lastclass includes cancelled classes
+-- also if you select firstname, lastname, lastclass, lastattend from vw_lastsaleorclass where lastclass != lastattend;
+-- you can see there are some differences; lastattend is most accurate
+(select max(classdate) from attend where attend.custid=cust.id and status='Enrolled') as lastattend
+from cust;
+
+drop view vw_activecustomerslast30;
+create view vw_activecustomerslast30 as
+select * from vw_lastsaleorclass
+where (date(lastsale) >= date('now', '-30 days')) or (date(lastattend) >= date('now', '-30 days'));
+
+drop view vw_activecustomersprev30;
+create view vw_activecustomersprev30 as
+select * from vw_lastsaleorclass
+where (date(lastsale) between date('now', '-60 days') and date('now', '-30 days')) 
+or (date(lastattend) between date('now', '-60 days') and date('now', '-30 days'));
+
+
+
 drop view vw_customersalesalltime;
 create view vw_customersalesalltime as 
 select custid, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, count(*) as cnt, sum(total) as total 
 from sale join cust c on sale.custid=c.id 
-where pmtype != 'Comp'
+-- this clause with the date just makes sure they are still active (have ridden or done a tx in past 60 days)
+where pmtype != 'Comp' and (select max(dt) from sale s2 where s2.custid=sale.custid) >= date('now', '-60 days')
 group by custid order by total desc;
 
 drop view vw_customersaleslast30;
