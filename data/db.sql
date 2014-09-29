@@ -78,6 +78,7 @@ totnum int,
 primary key (id)
 );
 
+drop view v_sale;
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
 -- get sales by city
@@ -331,42 +332,96 @@ as
 select inst, classdate, count(*) as numriders from attend 
 group by inst, classdate;
 
+drop view vw_statsbyinstrweekly;
+create view vw_statsbyinstrweekly
+as
+select inst, strftime('%Y-%W', classdate) as week, count(*) as numclasses, sum(numriders) as totalriders, 
+       round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass
+group by inst, week;
+
+/* TODO: past 4 weeks not including current week; do a linear regression on ridersperclass
+drop view vw_instrtrend4week;
+create view vw_instrtrend4week
+as
+select * from vw_statsbyinstrweekly 
+where week between 
+*/
+
+order by inst, week desc;
+
+drop view vw_statsbyslotinstralltime;
+create view vw_statsbyslotinstralltime
+as
+select strftime('%w', classdate) as dow, strftime('%H:%M', classdate) as hhmm, 
+inst, count(*) as numclasses, sum(numriders) as totalriders, round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass group by dow, hhmm, inst
+order by dow, hhmm, inst;
+
+drop view vw_statsbyslotalltime;
+create view vw_statsbyslotalltime
+as
+select strftime('%w', classdate) as dow, strftime('%H:%M', classdate) as hhmm, 
+  count(*) as numclasses, sum(numriders) as totalriders, round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass group by dow, hhmm
+order by dow, hhmm;
+
+drop view vw_statsbyslotlast30;
+create view vw_statsbyslotlast30
+as
+select strftime('%w', classdate) as dow, strftime('%H:%M', classdate) as hhmm, 
+  count(*) as numclasses, sum(numriders) as totalriders, round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass 
+where date(classdate) between date('now', '-31 days') and date('now', '-1 days')
+group by dow, hhmm
+order by dow, hhmm;
+
+drop view vw_statsbyslotprev30;
+create view vw_statsbyslotprev30
+as
+select strftime('%w', classdate) as dow, strftime('%H:%M', classdate) as hhmm, 
+  count(*) as numclasses, sum(numriders) as totalriders, round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass 
+where date(classdate) between date('now', '-62 days') and date('now', '-32 days')
+group by dow, hhmm
+order by dow, hhmm;
+
+
 drop view vw_statsbyinstrlast7;
 create view vw_statsbyinstrlast7
 as
 select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
-  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+  sum(numriders) as totalriders, round(cast(sum(numriders) as float) / count(*),1) as ridersperclass
 from vw_statsbyclass
-where date(classdate) between date('now', '-7 days') and date('now', '-1 days')
+where date(classdate) between date('now', '-8 days') and date('now', '-1 days')
 group by inst;
 
 drop view vw_statsbyinstrprev7;
 create view vw_statsbyinstrprev7
 as
 select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
-  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+  sum(numriders) as totalriders, round(cast(sum(numriders) as float) / count(*),1) as ridersperclass
 from vw_statsbyclass
-where date(classdate) between date('now', '-14 days') and date('now', '-8 days')
+where date(classdate) between date('now', '-16 days') and date('now', '-9 days')
 group by inst;
 
 drop view vw_statsbyinstrlast30;
 create view vw_statsbyinstrlast30
 as
 select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
-  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+  sum(numriders) as totalriders, round(cast(sum(numriders) as float)/ count(*),1) as ridersperclass
 from vw_statsbyclass
-where date(classdate) between date('now', '-30 days') and date('now', '-1 days')
+where date(classdate) between date('now', '-31 days') and date('now', '-1 days')
 group by inst;
 
 drop view vw_statsbyinstrprev30;
 create view vw_statsbyinstrprev30
 as
 select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, count(*) as numclasses, 
-  sum(numriders) as totalriders, sum(numriders) / count(*) as ridersperclass
+  sum(numriders) as totalriders, round(cast(sum(numriders) as float)/ count(*),1) as ridersperclass
 from vw_statsbyclass
-where date(classdate) between date('now', '-60 days') and date('now', '-31 days')
+where date(classdate) between date('now', '-62 days') and date('now', '-32 days')
 group by inst;
-
 
 
 drop view vw_customersalesalltime;
