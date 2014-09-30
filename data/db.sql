@@ -78,6 +78,21 @@ totnum int,
 primary key (id)
 );
 
+create table openseries (
+emailaddress string,
+firstname string,
+lastname string,
+series string,
+cost float,
+count int null,
+remaining int null,
+purchdt datetime,
+expiredt datetime,
+comped bool,
+lastclass datetime,
+prefloc string
+);
+
 drop view v_sale;
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
@@ -305,7 +320,18 @@ and c.id not in (select id from vw_fashionshowcusts) order by datecreated;
 
 --TODO: create new customers query too
 
+/* TODO: determine # of monthlies now and 30 days ago
+   TODO: determine how many end their 3 month commitment
+sqlite> select count(*) from sale where date(dt) >= date('now', '-30 days') and item='Unlimited JOY - Monthly';
+70
+sqlite> 
+sqlite> 
+sqlite> select count(*) from sale where date(dt) between date('now', '-61 days') and date('now', '-31 days') and item='Unlimited JOY - Monthly';
+57
+*/
 
+
+-- TODO: consider active customers just riders not people who buy something
 drop view vw_lastsaleorclass;
 create view vw_lastsaleorclass as
 select cust.*, (select max(dt) from sale where sale.custid=cust.id and pmtype != 'Comp') as lastsale, 
@@ -346,9 +372,9 @@ create view vw_instrtrend4week
 as
 select * from vw_statsbyinstrweekly 
 where week between 
+order by inst, week desc;
 */
 
-order by inst, week desc;
 
 drop view vw_statsbyslotinstralltime;
 create view vw_statsbyslotinstralltime

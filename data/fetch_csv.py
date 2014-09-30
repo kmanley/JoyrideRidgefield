@@ -62,12 +62,22 @@ def saveAttendance(cookies):
 	print "saving attendance"
 	with open("attendance.csv", "wb") as fp:
 		fp.write(getAttendance(cookies))
+
+def getSeries(cookies):
+	r = requests.get("http://www.joyrideridgefield.com/admin/index.cfm?action=Report.exportAllOpenSeries", headers=USERAGENT, cookies=cookies)
+	return r.text.encode("utf-8")
+	
+def saveSeries(cookies):
+	print "saving open series"
+	with open("openseries.csv", "wb") as fp:
+		fp.write(getSeries(cookies))
 	
 def main():
 	cookies = login()
 	saveCustomers(cookies)
 	saveSales(cookies)
 	saveAttendance(cookies)
+	saveSeries(cookies)
 	print "done"
 	
 if __name__ == "__main__":
