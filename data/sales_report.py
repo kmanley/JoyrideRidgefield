@@ -28,6 +28,64 @@ def get_custalltime():
 		io.write("None")
     return io.getvalue()
 
+def get_instructor_performance():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_statsbyinstr").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th></th><th colspan='3'>Prev 30</th><th colspan='3'>Last 30</th><th></th></tr>")
+		io.write("<tr><th>Instructor</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			io.write(("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td></tr>" %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+HALFFULL = 39. / 2.
+LOWOCC = HALFFULL * .9
+HIGHOCC = HALFFULL * 1.1
+
+def get_timeslot_performance():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_statsbyslot").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th></th><th></th><th colspan='3'>Prev 30</th><th colspan='3'>Last 30</th><th></th></tr>")
+		io.write("<tr><th>DOW</th><th>HHMM</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			row = list(row) # so we can mutate
+			row[0] = DOW[int(row[0])]
+			row = [x or '' for x in row] # eliminate None's
+			row = tuple(row) # so we can interpolate
+			if row[4]  <= LOWOCC:
+				prevstyle="color:red"
+			elif row[4] >= HIGHOCC:
+				prevstyle = "color:green"
+			else:
+				prevstyle = ""
+
+			if row[-2]  <= LOWOCC:
+				laststyle="color:red"
+			elif row[-2] >= HIGHOCC:
+				laststyle = "color:green"
+			else:
+				laststyle = ""
+			
+			if row[-1]  <= -10:
+				diffstyle="color:red"
+			elif row[-1] >= 10:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""
+			io.write((("<tr><td>%s</td><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right' style='" + prevstyle + "'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right' style='" + laststyle + "'>%s</td><td align='right' style='"+diffstyle+"'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+
 def send_report(report, subj, recips=None): 
 	recips = recips or ['kevin.manley@gmail.com'] # TODO: ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
@@ -46,9 +104,19 @@ def sales_report():
 	limit = 20
 	io = StringIO.StringIO()
 	io.write("<html><body>")
+
 	io.write("<h3 style='margin:0px;'>Top customers by spend (all time)</h3>")
 	io.write(get_custalltime())
 	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Instructor performance (past 60 days)</h3>")
+	io.write(get_instructor_performance())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Timeslot performance (past 60 days)</h3>")
+	io.write(get_timeslot_performance())
+	io.write("<p/>")
+	
 	io.write("<p/>Best regards,<br/>JoyRide Robot")
 	io.write("</body></html>")
 	if dryRun:

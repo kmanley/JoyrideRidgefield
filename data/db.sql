@@ -96,6 +96,13 @@ prefloc string
 drop view v_sale;
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
+/* promotion - get email addresses for customers who have bought a series in the past
+   but don't currently have an open series
+   
+ select distinct c.emailaddress from sale s join cust c on c.id=s.custid where item in ('5 Classes', '10 Classes', '20 Classes', '50 Classes', 'Unlimited JOY - Monthly', 'Unlimited JOY - Yearly', 'Student Semester Series') and c.emailaddress not in (select emailaddress from openseries);
+    
+*/
+
 -- get sales by city
 --select lower(city), sum(total) from v_sale group by lower(city) having sum(total)>0 order by sum(total) desc;
 
@@ -412,6 +419,17 @@ where date(classdate) between date('now', '-62 days') and date('now', '-32 days'
 group by dow, hhmm
 order by dow, hhmm;
 
+drop view vw_statsbyslot;
+create view vw_statsbyslot
+as
+select t.dow, t.hhmm, p.numclasses, p.totalriders, p.ridersperclass, t.numclasses, t.totalriders, 
+               t.ridersperclass, 
+        round(((t.ridersperclass / case when p.ridersperclass=0 then 1 else p.ridersperclass end) - 1.0) * 100., 1) as pctchange
+from vw_statsbyslotlast30 t left outer join vw_statsbyslotprev30 p on t.dow=p.dow and t.hhmm=p.hhmm
+order by t.dow, t.hhmm;
+
+
+
 
 drop view vw_statsbyinstrlast7;
 create view vw_statsbyinstrlast7
@@ -448,6 +466,14 @@ select inst, min(classdate) as minclassdate, max(classdate) as maxclassdate, cou
 from vw_statsbyclass
 where date(classdate) between date('now', '-62 days') and date('now', '-32 days')
 group by inst;
+
+drop view vw_statsbyinstr;
+create view vw_statsbyinstr
+as
+select t.inst, p.numclasses, p.totalriders, p.ridersperclass, t.numclasses, t.totalriders, t.ridersperclass, 
+     round(((t.ridersperclass / p.ridersperclass) - 1.0) * 100., 1) as pctchange
+from vw_statsbyinstrlast30 t left outer join vw_statsbyinstrprev30 p on t.inst = p.inst
+order by t.inst;
 
 
 drop view vw_customersalesalltime;
