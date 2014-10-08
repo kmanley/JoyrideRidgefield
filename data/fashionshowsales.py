@@ -8,7 +8,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-dryRun = False
+dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
@@ -37,15 +37,16 @@ def fashionshow_sales():
 	
 	io = StringIO.StringIO()
 	io.write("<html><body>")
-	rows = list(conn.cursor().execute("select firstname, lastname, item, total, dt, pmtype from sale where (item='VIP Ticket' and total='75.0') or (item='General Admission' and total='50.0') order by lastname, firstname;").fetchall())
+	rows = list(conn.cursor().execute("select cust.firstname, cust.lastname, emailaddress, item, total, dt, pmtype from sale " + 
+	                                  "inner join cust on sale.custid=cust.id where (item='VIP Ticket' and total='75.0') or (item='General Admission' and total='50.0') order by cust.lastname, cust.firstname;").fetchall())
 	if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
-		io.write("<tr><th>#</th><th>First name</th><th>Last Name</th><th>Ticket</th><th>Price</th><th>Purch Dt</th><th>Pmt Method</th></tr>")
+		io.write("<tr><th>#</th><th>First name</th><th>Last Name</th><th>Email</th><th>Ticket</th><th>Price</th><th>Purch Dt</th><th>Pmt Method</th></tr>")
 		for i, row in enumerate(rows):
-			firstname, lastname, item, price, dt, pmtype = row
+			firstname, lastname, email, item, price, dt, pmtype = row
 			dt = dt[:16]
-			io.write("<tr><td align='right'>%d</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%s</td><td>%s</td><td>%s</td></tr>" % \
-			    (i+1, firstname, lastname, item, price, dt, pmtype))
+			io.write(("<tr><td align='right'>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%s</td><td>%s</td><td>%s</td></tr>" % \
+			    (i+1, firstname, lastname, email, item, price, dt, pmtype)).encode('utf-8', 'replace'))
 		io.write("</table>")
 	else:
 		io.write("None")
