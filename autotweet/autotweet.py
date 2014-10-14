@@ -36,7 +36,7 @@ if not found:
 
 classes = []
 sib = li.findNextSibling()
-while sib.text.count("-") == 2:
+while sib.text.count("-") >= 2:
     parts = sib.text.split(" - ")
     if len(parts) != 3:
         log.warning("didn't find expected 3 part class description: %s" % sib.text)
