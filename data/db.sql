@@ -339,6 +339,7 @@ sqlite> select count(*) from sale where date(dt) between date('now', '-61 days')
 
 
 -- TODO: consider active customers just riders not people who buy something
+/*
 drop view vw_lastsaleorclass;
 create view vw_lastsaleorclass as
 select cust.*, (select max(dt) from sale where sale.custid=cust.id and pmtype != 'Comp') as lastsale, 
@@ -358,6 +359,30 @@ create view vw_activecustomersprev30 as
 select * from vw_lastsaleorclass
 where (date(lastsale) between date('now', '-59 days') and date('now', '-30 days')) 
 or (date(lastattend) between date('now', '-59 days') and date('now', '-30 days'));
+*/
+
+create view vw_lastattend as
+select cust.*, 
+-- NOTE: I'm using lastattend here instead of cust.lastclass, since I'm not sure if lastclass includes cancelled classes
+-- also if you select firstname, lastname, lastclass, lastattend from vw_lastsaleorclass where lastclass != lastattend;
+-- you can see there are some differences; lastattend is most accurate
+(select max(classdate) from attend where attend.custid=cust.id and status='Enrolled') as lastattend
+from cust;
+
+drop view vw_activecustomerslast30;
+create view vw_activecustomerslast30 as
+select distinct custid from attend where date(classdate) >= date('now', '-29 days')
+
+drop view vw_activecustomersprev30;
+create view vw_activecustomersprev30 as
+select distinct custid from attend where 
+	date(classdate) between date('now', '-59 days') and date('now', '-30 days');
+
+drop view vw_activecustomers;
+create view vw_activecustomers as
+select (select count(*) from vw_activecustomersprev30) as p, 
+       (select count(*) from vw_activecustomerslast30) as t,
+       round((((select cast(count(*) as float) from vw_activecustomerslast30)/(select count(*) from vw_activecustomersprev30)) - 1.0) * 100., 1) as pctchange;
 
 drop view vw_statsbyclass;
 create view vw_statsbyclass 

@@ -1,3 +1,10 @@
+"""
+TODO: 
+- active series
+- monthlies detail
+- merchandise sales/series sales/total sales prev/last/diff
+"""
+
 import cStringIO as StringIO
 from envelopes import Envelope, GMailSMTP
 import getpass
@@ -11,6 +18,10 @@ log.setLevel(logging.INFO)
 dryRun = True
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
+DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+HALFFULL = 39. / 2.
+LOWOCC = int(HALFFULL * .8)
+HIGHOCC = int(HALFFULL * 1.2)
 
 conn = sqlite3.connect("joyridge.dat")
 
@@ -36,16 +47,56 @@ def get_instructor_performance():
 		io.write("<tr><th></th><th colspan='3'>Prev 30</th><th colspan='3'>Last 30</th><th></th></tr>")
 		io.write("<tr><th>Instructor</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th># Classes</th><th># Riders</th><th>Riders/class</th><th>% Change</th></tr>")
 		for i, row in enumerate(rows):
-			io.write(("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td></tr>" %  (row)).encode('utf-8', 'replace'))
+			row = tuple([x or '' for x in row]) # eliminate Nones
+			row = tuple(row) # so we can interpolate
+			if row[3]  <= LOWOCC:
+				prevstyle="color:red"
+			elif row[3] >= HIGHOCC:
+				prevstyle = "color:green"
+			else:
+				prevstyle = ""
+
+			if row[-2]  <= LOWOCC:
+				laststyle="color:red"
+			elif row[-2] >= HIGHOCC:
+				laststyle = "color:green"
+			else:
+				laststyle = ""
+
+			THRESH = 10 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""
+			
+			io.write((("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + prevstyle + "'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + laststyle + "'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
     return io.getvalue()
 
-DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-HALFFULL = 39. / 2.
-LOWOCC = HALFFULL * .9
-HIGHOCC = HALFFULL * 1.1
+def get_active_customers():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_activecustomers").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th colspan='1'>Prev 30</th><th colspan='1'>Last 30</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			THRESH = 0 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""			
+			io.write((("<tr><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
 
 def get_timeslot_performance():
     io = StringIO.StringIO()
@@ -57,7 +108,7 @@ def get_timeslot_performance():
 		for i, row in enumerate(rows):
 			row = list(row) # so we can mutate
 			row[0] = DOW[int(row[0])]
-			row = [x or '' for x in row] # eliminate None's
+			row = [x or '' for x in row] # eliminate Nones
 			row = tuple(row) # so we can interpolate
 			if row[4]  <= LOWOCC:
 				prevstyle="color:red"
@@ -72,10 +123,11 @@ def get_timeslot_performance():
 				laststyle = "color:green"
 			else:
 				laststyle = ""
-			
-			if row[-1]  <= -10:
+
+			THRESH = 10 # percent
+			if row[-1]  <= -THRESH:
 				diffstyle="color:red"
-			elif row[-1] >= 10:
+			elif row[-1] >= THRESH:
 				diffstyle = "color:green"
 			else:
 				diffstyle = ""
@@ -107,6 +159,10 @@ def sales_report():
 
 	io.write("<h3 style='margin:0px;'>Top customers by spend (all time)</h3>")
 	io.write(get_custalltime())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Active customers (past 60 days)</h3>")
+	io.write(get_active_customers())
 	io.write("<p/>")
 
 	io.write("<h3 style='margin:0px;'>Instructor performance (past 60 days)</h3>")
