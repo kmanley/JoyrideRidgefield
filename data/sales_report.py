@@ -25,6 +25,49 @@ HIGHOCC = int(HALFFULL * 1.2)
 
 conn = sqlite3.connect("joyridge.dat")
 
+def get_sales_30_day():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_salestypes30day").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th></th><th colspan='2'>Prev 30</th><th colspan='2'>Last 30</th><th></th></tr>")
+		io.write("<tr><th>Type</th><th># Sales</th><th>$ Total</th><th># Sales</th><th>$ Total</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			THRESH = 0 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""	
+			io.write((("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+def get_sales_7_day():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_salestypes7day").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th></th><th colspan='2'>Prev 7</th><th colspan='2'>Last 7</th><th></th></tr>")
+		io.write("<tr><th>Type</th><th># Sales</th><th>$ Total</th><th># Sales</th><th>$ Total</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			THRESH = 0 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""	
+			io.write((("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+
 def get_custalltime():
     io = StringIO.StringIO()
     rows = list(conn.cursor().execute("select * from vw_customersalesalltime limit 20").fetchall())
@@ -157,12 +200,16 @@ def sales_report():
 	io = StringIO.StringIO()
 	io.write("<html><body>")
 
-	io.write("<h3 style='margin:0px;'>Top customers by spend (all time)</h3>")
-	io.write(get_custalltime())
-	io.write("<p/>")
-
 	io.write("<h3 style='margin:0px;'>Active customers (past 60 days)</h3>")
 	io.write(get_active_customers())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Sales (past 60 days)</h3>")
+	io.write(get_sales_30_day())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Sales (past 14 days)</h3>")
+	io.write(get_sales_7_day())
 	io.write("<p/>")
 
 	io.write("<h3 style='margin:0px;'>Instructor performance (past 60 days)</h3>")
@@ -172,6 +219,10 @@ def sales_report():
 	io.write("<h3 style='margin:0px;'>Timeslot performance (past 60 days)</h3>")
 	io.write(get_timeslot_performance())
 	io.write("<p/>")
+
+	#io.write("<h3 style='margin:0px;'>Top customers by spend (all time)</h3>")
+	#io.write(get_custalltime())
+	#io.write("<p/>")
 	
 	io.write("<p/>Best regards,<br/>JoyRide Robot")
 	io.write("</body></html>")
