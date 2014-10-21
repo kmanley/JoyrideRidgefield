@@ -1,8 +1,9 @@
 """
 TODO: 
-- active series
 - monthlies detail
 - merchandise sales/series sales/total sales prev/last/diff
+- comps/refunds
+- new customers
 """
 
 import cStringIO as StringIO
@@ -62,6 +63,41 @@ def get_sales_7_day():
 			else:
 				diffstyle = ""	
 			io.write((("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+def get_sales_detail_30_day():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_salesitems30day").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th></th><th colspan='2'>Prev 30</th><th colspan='2'>Last 30</th><th></th></tr>")
+		io.write("<tr><th>Item</th><th># Sales</th><th>$ Total</th><th># Sales</th><th>$ Total</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			row = tuple([x or '' for x in row]) # eliminate Nones
+			THRESH = 0 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""	
+			io.write((("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
+
+def get_open_series():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_openseries2").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th>Series</th><th>Count</th><th>Total Seats</th><th>Used Seats</th><th>Remaining Seats</th></tr>")
+		for i, row in enumerate(rows):
+			io.write(("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td>" % row).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -204,12 +240,20 @@ def sales_report():
 	io.write(get_active_customers())
 	io.write("<p/>")
 
-	io.write("<h3 style='margin:0px;'>Sales (past 60 days)</h3>")
+	io.write("<h3 style='margin:0px;'>Total Sales (past 60 days)</h3>")
 	io.write(get_sales_30_day())
 	io.write("<p/>")
 
-	io.write("<h3 style='margin:0px;'>Sales (past 14 days)</h3>")
+	io.write("<h3 style='margin:0px;'>Total Sales (past 14 days)</h3>")
 	io.write(get_sales_7_day())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Sales Detail(past 60 days)</h3>")
+	io.write(get_sales_detail_30_day())
+	io.write("<p/>")
+
+	io.write("<h3 style='margin:0px;'>Open series</h3>")
+	io.write(get_open_series())
 	io.write("<p/>")
 
 	io.write("<h3 style='margin:0px;'>Instructor performance (past 60 days)</h3>")

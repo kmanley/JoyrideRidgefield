@@ -96,6 +96,20 @@ prefloc string
 drop view v_sale;
 create view v_sale as select * from sale left join cust on sale.custid=cust.id;
 
+drop view vw_openseries;
+create view vw_openseries as select series, count(*) as cnt, cast(sum(count) as int) as totalclasses, 
+cast(sum(count)-sum(remaining) as int) as usedclasses, cast(sum(remaining) as int) as remainingclasses from openseries 
+group by series order by series;
+
+-- this one includes totals
+drop view vw_openseries2;
+create view vw_openseries2 as 
+select * from vw_openseries
+union all
+select 'TOTAL', sum(cnt) as ttlseries, sum(totalclasses) as ttlclasses, sum(usedclasses) as ttlused, sum(remainingclasses) as ttlremain
+    from vw_openseries;
+
+
 /* promotion - get email addresses for customers who have bought a series in the past
    but don't currently have an open series
    
@@ -525,6 +539,7 @@ where pmtype != 'Comp' and date(dt) >= date('now', '-7 days')
 
 group by custid order by total desc;
 
+/*
 drop view vw_itemsaleslastalltime;
 create view vw_itemsalesalltime as 
 select item, count(*) as cnt, sum(total) as total 
@@ -557,6 +572,7 @@ create view vw_totalsaleslast7 as
 select count(*) as cnt, sum(total) as total 
 from sale 
 where pmtype != 'Comp' and date(dt) >= date('now', '-7 days');
+*/
 
 drop view vw_compslast7;
 create view vw_compslast7 as 
@@ -597,6 +613,36 @@ select t.typ, p.cnt, p.ttl, t.cnt, t.ttl,
      round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
 from vw_salestypeslast30 t left outer join vw_salestypesprev30 p on t.typ = p.typ
 order by t.typ;
+
+-- TODO: finish 30 day sales by item
+-- TODO: omit comps from this and vw_salestypesXday?
+drop view vw_salesitemslast30;
+create view vw_salesitemslast30 as 
+select item, count(*) as cnt, sum(total) as ttl from sale 
+where date(dt) between date('now', '-31 days') and date('now', '-1 days')
+group by item
+order by item;
+
+drop view vw_salesitemsprev30;
+create view vw_salesitemsprev30 as 
+select item, count(*) as cnt, sum(total) as ttl from sale 
+where date(dt) between date('now', '-62 days') and date('now', '-32 days')
+group by item
+order by item;
+
+drop view vw_salesitems30day;
+create view vw_salesitems30day
+as
+select t.item, p.cnt, p.ttl, t.cnt, t.ttl,  
+     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
+from vw_salesitemslast30 t left outer join vw_salesitemsprev30 p on t.item = p.item
+union all
+select p.item, p.cnt, p.ttl, t.cnt, t.ttl,  
+     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
+from vw_salesitemsprev30 p left outer join vw_salesitemslast30 t on t.item = p.item 
+where p.item not in (select item from vw_salesitemslast30)
+order by t.item;
+
 
 -- 7 day sales by type
 drop view vw_salestypeslast7;
