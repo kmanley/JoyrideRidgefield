@@ -575,13 +575,54 @@ drop view vw_salestypesalltime;
 create view vw_salestypesalltime as 
 select count(*) as cnt, sum(total) as ttl, typ from sale group by typ;
 
+-- 30 day sales by type
 drop view vw_salestypeslast30;
 create view vw_salestypeslast30 as 
-select count(*) as cnt, sum(total) as ttl, typ from sale where dt >= date('now', '-30 days') group by typ;
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-31 days') and date('now', '-1 days')
+group by typ
+order by typ;
 
+drop view vw_salestypesprev30;
+create view vw_salestypesprev30 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-62 days') and date('now', '-32 days')
+group by typ
+order by typ;
+
+drop view vw_salestypes30day;
+create view vw_salestypes30day
+as
+select t.typ, p.cnt, p.ttl, t.cnt, t.ttl,  
+     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
+from vw_salestypeslast30 t left outer join vw_salestypesprev30 p on t.typ = p.typ
+order by t.typ;
+
+-- 7 day sales by type
 drop view vw_salestypeslast7;
 create view vw_salestypeslast7 as 
-select count(*) as cnt, sum(total) as ttl, typ from sale where dt >= date('now', '-7 days') group by typ;
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-8 days') and date('now', '-1 days')
+group by typ
+order by typ;
+
+drop view vw_salestypesprev7;
+create view vw_salestypesprev7 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-16 days') and date('now', '-9 days')
+group by typ
+order by typ;
+
+drop view vw_salestypes7day;
+create view vw_salestypes7day
+as
+select t.typ, p.cnt, p.ttl, t.cnt, t.ttl,  
+     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
+from vw_salestypeslast7 t left outer join vw_salestypesprev7 p on t.typ = p.typ
+order by t.typ;
+
+
+
 
 
 --select custid, a.firstname, a.lastname, a.emailaddress, phone, phone2, count(*) as cnt, max(classdate) as classdate from attend a join cust c on a.custid=c.id where status='Enrolled' group by custid having (cnt > 90 and cnt <= 100) 
