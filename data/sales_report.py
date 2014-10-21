@@ -28,7 +28,7 @@ conn = sqlite3.connect("joyridge.dat")
 
 def get_sales_30_day():
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_salestypes30day").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_salestypes30daywtotal").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th></th><th colspan='2'>Prev 30</th><th colspan='2'>Last 30</th><th></th></tr>")
@@ -49,7 +49,7 @@ def get_sales_30_day():
 
 def get_sales_7_day():
     io = StringIO.StringIO()
-    rows = list(conn.cursor().execute("select * from vw_salestypes7day").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_salestypes7daywtotal").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th></th><th colspan='2'>Prev 7</th><th colspan='2'>Last 7</th><th></th></tr>")
@@ -77,7 +77,7 @@ def get_sales_detail_30_day():
 		io.write("<tr><th>Item</th><th># Sales</th><th>$ Total</th><th># Sales</th><th>$ Total</th><th>% Change</th></tr>")
 		for i, row in enumerate(rows):
 			row = tuple([x or '' for x in row]) # eliminate Nones
-			THRESH = 0 # percent
+			THRESH = 10 # percent
 			if row[-1]  <= -THRESH:
 				diffstyle="color:red"
 			elif row[-1] >= THRESH:
@@ -95,7 +95,7 @@ def get_open_series():
     rows = list(conn.cursor().execute("select * from vw_openseries2").fetchall())
     if rows:
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
-		io.write("<tr><th>Series</th><th>Count</th><th>Total Seats</th><th>Used Seats</th><th>Remaining Seats</th></tr>")
+		io.write("<tr><th>Series</th><th>Count</th><th>Total Seats</th><th>Used</th><th>Remaining</th></tr>")
 		for i, row in enumerate(rows):
 			io.write(("<tr><td>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td><td align='right'>%s</td>" % row).encode('utf-8', 'replace'))
 		io.write("</table>")
@@ -176,6 +176,25 @@ def get_active_customers():
 		io.write("None")
     return io.getvalue()
 
+def get_new_customers():
+    io = StringIO.StringIO()
+    rows = list(conn.cursor().execute("select * from vw_newcust30day").fetchall())
+    if rows:
+		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+		io.write("<tr><th colspan='1'>Prev 30</th><th colspan='1'>Last 30</th><th>% Change</th></tr>")
+		for i, row in enumerate(rows):
+			THRESH = 0 # percent
+			if row[-1]  <= -THRESH:
+				diffstyle="color:red"
+			elif row[-1] >= THRESH:
+				diffstyle = "color:green"
+			else:
+				diffstyle = ""			
+			io.write((("<tr><td align='right'>%s</td><td align='right'>%s</td><td align='right'  style='" + diffstyle + "'>%s</td></tr>") %  (row)).encode('utf-8', 'replace'))
+		io.write("</table>")
+    else:
+		io.write("None")
+    return io.getvalue()
 
 def get_timeslot_performance():
     io = StringIO.StringIO()
@@ -240,6 +259,10 @@ def sales_report():
 	io.write(get_active_customers())
 	io.write("<p/>")
 
+	io.write("<h3 style='margin:0px;'>New customers (past 60 days)</h3>")
+	io.write(get_new_customers())
+	io.write("<p/>")
+
 	io.write("<h3 style='margin:0px;'>Total Sales (past 60 days)</h3>")
 	io.write(get_sales_30_day())
 	io.write("<p/>")
@@ -248,7 +271,7 @@ def sales_report():
 	io.write(get_sales_7_day())
 	io.write("<p/>")
 
-	io.write("<h3 style='margin:0px;'>Sales Detail(past 60 days)</h3>")
+	io.write("<h3 style='margin:0px;'>Sales Detail (past 60 days)</h3>")
 	io.write(get_sales_detail_30_day())
 	io.write("<p/>")
 

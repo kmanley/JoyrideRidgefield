@@ -591,6 +591,27 @@ drop view vw_salestypesalltime;
 create view vw_salestypesalltime as 
 select count(*) as cnt, sum(total) as ttl, typ from sale group by typ;
 
+-- new customers over past 60 days
+drop view vw_newcustlast30;
+create view vw_newcustlast30 as 
+select * from vw_cust  
+where date(datecreated) between date('now', '-31 days') and date('now', '-1 days')
+order by id;
+
+drop view vw_newcustprev30;
+create view vw_newcustprev30 as 
+select * from vw_cust  
+where date(datecreated) between date('now', '-62 days') and date('now', '-32 days')
+order by id;
+
+drop view vw_newcust30day;
+create view vw_newcust30day
+as
+select (select count(*) from vw_newcustprev30) as pcnt, 
+       (select count(*) from vw_newcustlast30) as tcnt,
+     round((((select cast(count(*) as float) from vw_newcustlast30) / (select count(*) from vw_newcustprev30)) - 1.0) * 100., 1) as pctchange
+;
+
 -- 30 day sales by type
 drop view vw_salestypeslast30;
 create view vw_salestypeslast30 as 
@@ -609,12 +630,54 @@ order by typ;
 drop view vw_salestypes30day;
 create view vw_salestypes30day
 as
-select t.typ, p.cnt, p.ttl, t.cnt, t.ttl,  
+select t.typ, p.cnt as pcnt, p.ttl as pttl, t.cnt as tcnt, t.ttl as tttl,  
      round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
 from vw_salestypeslast30 t left outer join vw_salestypesprev30 p on t.typ = p.typ
 order by t.typ;
 
--- TODO: finish 30 day sales by item
+drop view vw_salestypes30daywtotal;
+create view vw_salestypes30daywtotal
+as
+select * from vw_salestypes30day
+union all
+select 'TOTAL', sum(pcnt), sum(pttl), sum(tcnt), sum(tttl), 
+     round(((sum(tttl) / sum(pttl)) - 1.0) * 100., 1) as pctchange
+from vw_salestypes30day;
+
+
+-- 7 day sales by type
+drop view vw_salestypeslast7;
+create view vw_salestypeslast7 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-8 days') and date('now', '-1 days')
+group by typ
+order by typ;
+
+drop view vw_salestypesprev7;
+create view vw_salestypesprev7 as 
+select count(*) as cnt, sum(total) as ttl, typ from sale 
+where date(dt) between date('now', '-16 days') and date('now', '-9 days')
+group by typ
+order by typ;
+
+drop view vw_salestypes7day;
+create view vw_salestypes7day
+as
+select t.typ, p.cnt as pcnt, p.ttl as pttl, t.cnt as tcnt, t.ttl as tttl,  
+     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
+from vw_salestypeslast7 t left outer join vw_salestypesprev7 p on t.typ = p.typ
+order by t.typ;
+
+drop view vw_salestypes7daywtotal;
+create view vw_salestypes7daywtotal
+as
+select * from vw_salestypes7day
+union all
+select 'TOTAL', sum(pcnt), sum(pttl), sum(tcnt), sum(tttl), 
+     round(((sum(tttl) / sum(pttl)) - 1.0) * 100., 1) as pctchange
+from vw_salestypes7day;
+
+
 -- TODO: omit comps from this and vw_salestypesXday?
 drop view vw_salesitemslast30;
 create view vw_salesitemslast30 as 
@@ -637,36 +700,12 @@ select t.item, p.cnt, p.ttl, t.cnt, t.ttl,
      round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
 from vw_salesitemslast30 t left outer join vw_salesitemsprev30 p on t.item = p.item
 union all
+-- include stuff we sold in prev 30 days period that didn't sell in past 30 days
 select p.item, p.cnt, p.ttl, t.cnt, t.ttl,  
      round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
 from vw_salesitemsprev30 p left outer join vw_salesitemslast30 t on t.item = p.item 
 where p.item not in (select item from vw_salesitemslast30)
 order by t.item;
-
-
--- 7 day sales by type
-drop view vw_salestypeslast7;
-create view vw_salestypeslast7 as 
-select count(*) as cnt, sum(total) as ttl, typ from sale 
-where date(dt) between date('now', '-8 days') and date('now', '-1 days')
-group by typ
-order by typ;
-
-drop view vw_salestypesprev7;
-create view vw_salestypesprev7 as 
-select count(*) as cnt, sum(total) as ttl, typ from sale 
-where date(dt) between date('now', '-16 days') and date('now', '-9 days')
-group by typ
-order by typ;
-
-drop view vw_salestypes7day;
-create view vw_salestypes7day
-as
-select t.typ, p.cnt, p.ttl, t.cnt, t.ttl,  
-     round(((t.ttl / p.ttl) - 1.0) * 100., 1) as pctchange
-from vw_salestypeslast7 t left outer join vw_salestypesprev7 p on t.typ = p.typ
-order by t.typ;
-
 
 
 
