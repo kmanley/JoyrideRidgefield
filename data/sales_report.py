@@ -16,7 +16,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-dryRun = True
+dryRun = False
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -237,7 +237,7 @@ def get_timeslot_performance():
 
 
 def send_report(report, subj, recips=None): 
-	recips = recips or ['kevin.manley@gmail.com'] # TODO: ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
+	recips = recips or ['kevin.manley@gmail.com', 'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com'] # TODO: ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
 	    to_addr=recips,
@@ -297,7 +297,7 @@ def sales_report():
 		with open("/tmp/test.html","wb") as fp:
 			fp.write(io.getvalue())    
 	else:
-		send_report(io.getvalue(), 'Sales report for %s' % str(TODAY))
+		send_report(io.getvalue(), 'Management report for %s' % str(TODAY))
 
 if __name__ == "__main__":
     sales_report()
