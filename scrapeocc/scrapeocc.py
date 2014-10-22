@@ -15,6 +15,7 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
+#SITENAMES = ["westport", "darien", "ridgefield", "texas"]
 SITENAMES = ["westport", "darien", "ridgefield", "texas"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
@@ -36,7 +37,7 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
 
 CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
 	           "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
-               "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass",
+               "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
                "texas":"http://www.joyridetexas.com/reserve/index.cfm?action=Reserve.chooseClass",
                } 
 
