@@ -385,7 +385,7 @@ from cust;
 
 drop view vw_activecustomerslast30;
 create view vw_activecustomerslast30 as
-select distinct custid from attend where date(classdate) >= date('now', '-29 days')
+select distinct custid from attend where date(classdate) >= date('now', '-29 days');
 
 drop view vw_activecustomersprev30;
 create view vw_activecustomersprev30 as
