@@ -37,7 +37,7 @@ def get_table(dt):
 def send_report(report, subj):
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    to_addr=['kevin@joyrideridgefield.com', 'amypal@joyrideridgefield.com'],
+	    to_addr=['kevin.manley@gmail.com', 'amypal@joyrideridgefield.com'],
 	    subject=subj,
 	    html_body=report
 	)
