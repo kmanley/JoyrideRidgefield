@@ -41,7 +41,7 @@ CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?acti
                "texas":"http://www.joyridetexas.com/reserve/index.cfm?action=Reserve.chooseClass",
                } 
 
-CAPACITY = {"westport":44, 
+CAPACITY = {"westport":46, 
 			"darien":40, 
             "ridgefield":39,
             "texas":35,}
