@@ -227,12 +227,12 @@ where last30 > prev30
 order by last30-prev30 desc, last30 desc;
 
 -- note: the complicated order by is designed to flag the best customers who are trending down
---drop view vw_riderstrendingdown;
+drop view vw_riderstrendingdown;
 create view vw_riderstrendingdown as 
 select v1.custid, v1.firstname, v1.lastname, v1.emailaddress, v1.phone, v1.phone2, 
 v1.cnt as prev30, v2.cnt as last30 from vw_attendprev30 v1 left outer join vw_attendlast30 v2 on v1.custid=v2.custid 
 where prev30 > 0 and prev30 > last30 
-order by (1.0*prev30)/(1*last30) * (prev30-last30) desc;
+order by prev30-last30 desc;
 
 --drop view vw_riderslapsed;
 create view vw_riderslapsed as 
