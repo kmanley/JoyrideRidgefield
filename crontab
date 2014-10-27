@@ -21,6 +21,7 @@
 # 
 MAILTO=""
 # m h  dom mon dow   command
+0 5 * * * cd /root/code/JoyRideRidgefield/updown && python updown.py
 59 11 * * * cd /root/code/JoyRideRidgefield/autotweet && python autotweet.py -a
 15-59/2 5 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python scrapeocc.py -db
 */2 6-20 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python scrapeocc.py -db
@@ -30,6 +31,6 @@ MAILTO=""
 0 16 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python mailreport.py 
 0 21 * * * cd /root/code/JoyRideRidgefield/scrapeocc && python mailreport.py 
 0 5 * * * cd /root/code/JoyRideRidgefield/data && python data_loader.py
-10 5 * * * cd /root/code/JoyRideRidgefield/data && python mailreport.py
-
+20 5 * * * cd /root/code/JoyRideRidgefield/data && python mailreport.py
+0 6 * * 1 cd /root/code/JoyRideRidgefield/data && python sales_report.py
 
