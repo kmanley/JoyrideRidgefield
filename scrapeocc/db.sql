@@ -39,6 +39,15 @@ round(avg(pct),1) as occupancy from v_occ
 group by yymm, site;
 
 
+drop view vw_occyymmbyinstr;
+create view vw_occyymmbyinstr
+as
+select strftime('%Y-%m',dt) as yymm, site, instr, count(*) as numclasses, sum(unavail) as enrolled, 
+sum(total) as avail, round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
+round(avg(pct),1) as occupancy from v_occ 
+group by yymm, site, instr;
+
+
 
 
 
