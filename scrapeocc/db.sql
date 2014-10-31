@@ -21,6 +21,24 @@ sqlite> select site, sum(cnt) as ttlcnt, sum(unavail) as ttlunavail, sum(total) 
 sqlite> 
 sqlite> where dt between date('now', '-60 days') and date('now') group by site order by site;
 Error: near "where": syntax error
-
-
 */
+
+drop view vw_occalltime;
+create view vw_occalltime
+as
+select site, count(*) as numclasses, sum(unavail) as enrolled, 
+sum(total) as avail, round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
+round(avg(pct),1) as occupancy from v_occ group by site;
+
+drop view vw_occyymm;
+create view vw_occyymm
+as
+select strftime('%Y-%m',dt) as yymm, site, count(*) as numclasses, sum(unavail) as enrolled, 
+sum(total) as avail, round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
+round(avg(pct),1) as occupancy from v_occ 
+group by yymm, site;
+
+
+
+
+

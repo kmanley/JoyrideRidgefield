@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = False
+dryRun = True
 
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
@@ -33,6 +33,18 @@ def get_table(dt):
                 io.write("<tr><td colspan='6' bgcolor='#aaaaaa'/></tr>")
     io.write("</table>")
     return io.getvalue()
+    
+def get_history_by_studio():
+    io = StringIO.StringIO()
+    #curs = conn.cursor()
+    rows = list(conn.cursor().execute("select * from vw_occyymm order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end;").fetchall())
+    #rows = curs.fetchall()
+    io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
+    io.write("<tr><th>Month</th><th>Studio</th><th># Classes</th><th>Sold</th><th>Total</th><th>Riders/Class</th><th>Occupancy</th></tr>")
+    for i, row in enumerate(rows):
+        io.write("<tr><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%.1f</td><td align='right'>%.1f%%</td></tr>" % row)
+    io.write("</table>")
+    return io.getvalue()    
 
 def send_report(report, subj):
 	envelope = Envelope(
@@ -49,10 +61,13 @@ def send_report(report, subj):
 def main():
 	io = StringIO.StringIO()
 	io.write("<html><body>")
+	io.write("Figures are approx 2% lower than actual since enrollments after start time aren't counted<br/>")
 	io.write("<h4>Today</h4>")
 	io.write(get_table(TODAY))
 	io.write("<h4>Tomorrow</h4>")
 	io.write(get_table(TOMORROW))
+	io.write("<h4>Historical Summary by Studio</h4>")
+	io.write(get_history_by_studio())
 	io.write("</body></html>")
 	if dryRun:
 		filename = "/tmp/test.html"
