@@ -51,7 +51,7 @@ def get_history_by_studio():
 def get_history_by_instr():
     io = StringIO.StringIO()
     #curs = conn.cursor()
-    rows = list(conn.cursor().execute("select * from vw_occyymmbyinstr where yymm>=strftime('%Y-%m',date('now','-1 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end, instr;").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_occyymmbyinstr where yymm>=strftime('%Y-%m',date('now','-1 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end, instrex;").fetchall())
     #rows = curs.fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Month</th><th>Studio</th><th>Instr</th><th>Classes</th><th>Sold</th><th>Total</th><th>Avg/Cls</th><th>Occ%</th></tr>")
