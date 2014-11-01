@@ -4,7 +4,7 @@ import getpass
 import sqlite3
 import datetime
 
-dryRun = False
+dryRun = True
 
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
@@ -42,6 +42,8 @@ def get_history_by_studio():
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Month</th><th>Studio</th><th>Classes</th><th>Sold</th><th>Total</th><th>Avg/Cls</th><th>Occ%</th></tr>")
     for i, row in enumerate(rows):
+        if i > 0 and rows[i][0] != rows[i-1][0]:
+            io.write("<tr><td colspan='7' bgcolor='#aaaaaa'/></tr>")
         io.write("<tr><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%.1f</td><td align='right'>%.1f%%</td></tr>" % row)
     io.write("</table>")
     return io.getvalue()    
@@ -54,6 +56,8 @@ def get_history_by_instr():
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Month</th><th>Studio</th><th>Instr</th><th>Classes</th><th>Sold</th><th>Total</th><th>Avg/Cls</th><th>Occ%</th></tr>")
     for i, row in enumerate(rows):
+        if i > 0 and rows[i][1] != rows[i-1][1]:
+            io.write("<tr><td colspan='8' bgcolor='#aaaaaa'/></tr>")	
         io.write("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%.1f</td><td align='right'>%.1f%%</td></tr>" % row)
     io.write("</table>")
     return io.getvalue()      
