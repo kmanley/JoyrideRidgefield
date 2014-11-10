@@ -49,5 +49,3 @@ group by yymm, site, instrex;
 
 
 
-
-
