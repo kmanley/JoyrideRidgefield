@@ -283,6 +283,9 @@ or (cnt > 790 and cnt <= 800) or (cnt > 890 and cnt <= 900) or (cnt > 990 and cn
 order by cnt desc;
 */
 
+/* note: don't have to explicitly check enrolled status here because we are relying
+   on 'num' column which is enrolled status-aware
+   */
 drop view vw_milestonenext7;
 create view vw_milestonenext7
 as
@@ -322,6 +325,11 @@ sqlite> select * from temp;
 create index idx_sale_custid on sale(custid);
 create index idx_attend_custid on attend(custid);
 
+drop view vw_classes;
+create view vw_classes 
+as 
+select classdate, classtype, inst, room, count(*) as enrolled 
+from attend where status='Enrolled' group by classdate;
 
 
 --select custid, firstname, lastname, count(*) as cnt, max(classdate) as maxclassdate from attend where status='Enrolled' and date(classdate)<=date('now','+20 days') group by custid;
@@ -398,10 +406,11 @@ select (select count(*) from vw_activecustomersprev30) as p,
        (select count(*) from vw_activecustomerslast30) as t,
        round((((select cast(count(*) as float) from vw_activecustomerslast30)/(select count(*) from vw_activecustomersprev30)) - 1.0) * 100., 1) as pctchange;
 
+-- TODO: refresh in prod, was missing Enrolled
 drop view vw_statsbyclass;
 create view vw_statsbyclass 
 as
-select inst, classdate, count(*) as numriders from attend 
+select inst, classdate, count(*) as numriders from attend where status='Enrolled'
 group by inst, classdate;
 
 drop view vw_statsbyinstrweekly;
@@ -411,6 +420,14 @@ select inst, strftime('%Y-%W', classdate) as week, count(*) as numclasses, sum(n
        round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
 from vw_statsbyclass
 group by inst, week;
+
+drop view vw_statsbyinstrmonthly;
+create view vw_statsbyinstrmonthly
+as
+select inst, strftime('%Y-%m',classdate) as yymm, count(*) as numclasses, sum(numriders) as totalriders, 
+       round(cast(sum(numriders) as float)/count(*),1) as ridersperclass
+from vw_statsbyclass
+group by inst, yymm;
 
 /* TODO: past 4 weeks not including current week; do a linear regression on ridersperclass
 drop view vw_instrtrend4week;
@@ -506,12 +523,23 @@ from vw_statsbyclass
 where date(classdate) between date('now', '-62 days') and date('now', '-32 days')
 group by inst;
 
+drop view vw_instrstatsalltime;
+create view vw_instrstatsalltime 
+as 
+select inst, count(*) as numclasses, sum(enrolled) as ttlenrolled,
+    round(cast(sum(enrolled) as float)/ count(*), 1) as ridersperclass
+from vw_classes 
+group by inst
+having count(*) > 10; -- skip one-off team teaches, etc. 
+
+-- TODO: finish, include all time
 drop view vw_statsbyinstr;
 create view vw_statsbyinstr
 as
-select t.inst, p.numclasses, p.totalriders, p.ridersperclass, t.numclasses, t.totalriders, t.ridersperclass, 
+select t.inst, a.numclasses, p.numclasses, p.totalriders, p.ridersperclass, t.numclasses, t.totalriders, t.ridersperclass, 
      round(((t.ridersperclass / p.ridersperclass) - 1.0) * 100., 1) as pctchange
 from vw_statsbyinstrlast30 t left outer join vw_statsbyinstrprev30 p on t.inst = p.inst
+      left join vw_instrstatsalltime a on t.inst = a.inst
 order by t.inst;
 
 
