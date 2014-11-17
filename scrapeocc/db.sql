@@ -33,8 +33,11 @@ round(avg(pct),1) as occupancy from v_occ group by site;
 drop view vw_occyymm;
 create view vw_occyymm
 as
-select strftime('%Y-%m',dt) as yymm, site, count(*) as numclasses, sum(unavail) as enrolled, 
-sum(total) as avail, round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
+select strftime('%Y-%m',dt) as yymm, site, count(*) as numclasses, 
+sum(unavail) as enrolled, 
+sum(total) as avail, 
+round(cast(sum(unavail) as float)/(min(julianday(date('now')), julianday(date(dt, 'start of month', '+1 month', '-1 day'))) - julianday(date(dt, 'start of month')) + 1),1) as ridersperday,
+round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
 round(avg(pct),1) as occupancy from v_occ 
 group by yymm, site;
 
