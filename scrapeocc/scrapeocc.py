@@ -165,6 +165,11 @@ def processSite(sitename, saveToDB=False):
             occ = 100.
         else:
             unavail, total, occ = getOccupancy(sitename, url, cookies)
+        if total < CAPACITY[sitename]:
+            # ktm 15 dec 14 - zingfit bug means we can no longer filter by room, so we get everything. only way to know
+            # if it's non-cycle is to check room size, but that won't work if the non-cycle class is sold out. luckily they
+            # don't seem to sell out.
+            continue
         print str(dt), instr, "%d/%d" % (unavail,total), "%.1f%%" % occ
         sum_unavail += unavail
         sum_total += total
