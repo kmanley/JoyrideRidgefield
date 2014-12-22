@@ -291,11 +291,13 @@ create view vw_milestonenext7
 as
 select custid, c.firstname, c.lastname, c.emailaddress, phone, phone2, classdate, num 
 from attend join cust c on attend.custid=c.id 
-where classdate between date('now') and date('now','+7 days') and ((num between 95 and 100) or (num between 195 and 200) or 
+-- ktm 22 dec 14 - change x00 to x01 to handle the case where on the day of their 100th ride they have
+-- already booked future rides, and therefore don't show up today
+where classdate between date('now', 'localtime') and date('now','+7 days', 'localtime') and ((num between 95 and 100) or (num between 195 and 200) or 
 (num between 295 and 300) or (num between 395 and 400) or (num between 495 and 500) 
 or (num between 595 and 600) or (num between 695 and 700) or 
 (num between 795 and 800) or (num between 895 and 900) or 
-(num between 995 and 1000)) order by c.lastname, c.firstname, classdate;
+(num between 995 and 1000)) or (num%100=0 and date(classdate)=date('now','localtime')) order by c.lastname, c.firstname, classdate;
 
 drop view vw_studiomilestonenext7;
 create view vw_studiomilestonenext7
@@ -478,14 +480,18 @@ order by dow, hhmm;
 drop view vw_statsbyslot;
 create view vw_statsbyslot
 as
-select t.dow, t.hhmm, p.numclasses, p.totalriders, p.ridersperclass, t.numclasses, t.totalriders, 
-               t.ridersperclass, 
+select t.dow, t.hhmm, p.numclasses as pnumclasses, p.totalriders as ptotalriders, p.ridersperclass as pridersperclass, 
+                      t.numclasses as tnumclasses, t.totalriders as ttotalriders, t.ridersperclass as tridersperclass, 
         round(((t.ridersperclass / case when p.ridersperclass=0 then 1 else p.ridersperclass end) - 1.0) * 100., 1) as pctchange
 from vw_statsbyslotlast30 t left outer join vw_statsbyslotprev30 p on t.dow=p.dow and t.hhmm=p.hhmm
 order by t.dow, t.hhmm;
 
-
-
+/* TODO: no, instead create vw_statsbydowprev30, vw_statsbydowlast30 and vw_statsbydow in terms of those 2
+drop view vw_statsbydow;
+create view vw_statsbydow
+as
+select dow, sum(pnumclasses), sum(ptotalriders), avg(ridersperclass)
+*/
 
 drop view vw_statsbyinstrlast7;
 create view vw_statsbyinstrlast7
