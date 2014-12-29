@@ -297,7 +297,7 @@ where classdate between date('now', 'localtime') and date('now','+7 days', 'loca
 (num between 295 and 300) or (num between 395 and 400) or (num between 495 and 500) 
 or (num between 595 and 600) or (num between 695 and 700) or 
 (num between 795 and 800) or (num between 895 and 900) or 
-(num between 995 and 1000)) or (num%100=0 and date(classdate)=date('now','localtime')) order by c.lastname, c.firstname, classdate;
+(num between 995 and 1000)) or (num%100=0 and num>0 and date(classdate)=date('now','localtime')) order by c.lastname, c.firstname, classdate;
 
 drop view vw_studiomilestonenext7;
 create view vw_studiomilestonenext7
