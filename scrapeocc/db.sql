@@ -45,7 +45,7 @@ group by yymm, site;
 drop view vw_occyymmbyinstr;
 create view vw_occyymmbyinstr
 as
-select strftime('%Y-%m',dt) as yymm, site, case when substr(instr,1,7)='Stacia' then instr when substr(instr,1,1)=='S' then substr(instr,2) else instr end as instrex, count(*) as numclasses, sum(unavail) as enrolled, 
+select strftime('%Y-%m',dt) as yymm, site, case when substr(instr,1,6)='Stacia' then instr when substr(instr,1,1)=='S' then substr(instr,2) else instr end as instrex, count(*) as numclasses, sum(unavail) as enrolled, 
 sum(total) as avail, round(cast(sum(unavail) as float) / count(*),1) as ridersperclass, 
 round(avg(pct),1) as occupancy from v_occ 
 group by yymm, site, instrex;
