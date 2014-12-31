@@ -145,7 +145,7 @@ def processSite(sitename, saveToDB=False):
     cookies = loginGetCookies(sitename)
     lastdt = None
     for item in getBookableLinks(sitename, cookies):
-        print item
+        #print item
         dt, instr, soldout, url = item
         if lastdt and dt.date() > lastdt:
             # NOTE: it's *remaining* occupancy for today since it's only correct for the whole day until the point the first

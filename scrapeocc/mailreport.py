@@ -44,6 +44,8 @@ def get_history_by_studio():
     for i, row in enumerate(rows):
         if i > 0 and rows[i][0] != rows[i-1][0]:
             io.write("<tr><td colspan='8' bgcolor='#aaaaaa'/></tr>")
+        row = tuple([x or 0 for x in row])# handle None
+        #print repr(row)
         io.write("<tr><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%d</td><td align='right'>%.1f</td><td align='right'>%.1f</td><td align='right'>%.1f%%</td></tr>" % row)
     io.write("</table>")
     return io.getvalue()    
