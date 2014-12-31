@@ -80,6 +80,8 @@ def getBookableLinks(site, cookies):
                     else:
                         soldout = False
                     year = (datetime.date(TODAY.year, TODAY.month, 1) + datetime.timedelta(days=day-1)).year
+                    if datetime.date(year, month, day) < TODAY:
+						year += 1
                     dt = datetime.datetime(year, month, day, hour, minute, 0)
                     yield dt, instr, soldout, link.get("href")
 	    else:
@@ -143,7 +145,7 @@ def processSite(sitename, saveToDB=False):
     cookies = loginGetCookies(sitename)
     lastdt = None
     for item in getBookableLinks(sitename, cookies):
-        #print item
+        print item
         dt, instr, soldout, url = item
         if lastdt and dt.date() > lastdt:
             # NOTE: it's *remaining* occupancy for today since it's only correct for the whole day until the point the first
