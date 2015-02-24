@@ -807,3 +807,10 @@ select '50-59', sum(cnt) from vw_numridesbyage where age between 50 and 59 union
 select '60-69', sum(cnt) from vw_numridesbyage where age between 60 and 69 union all
 select '70+', sum(cnt) from vw_numridesbyage where age >= 70;
 
+create view vseriesrevenue as select c.id, c.firstname, c.lastname, c.emailaddress, 
+(select sum(total) from sale where custid=c.id and typ='series') as seriesrevenue, 
+(select max(num) from attend where custid=c.id) as numrides from cust c;
+
+create view vavgcostperride as select *, seriesrevenue/numrides as avgcostperride from vseriesrevenue;
+
+
