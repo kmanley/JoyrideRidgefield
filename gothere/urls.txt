@@ -1,0 +1,19 @@
+#/from to
+
+/ http://www.joyrideridgefield.com/
+
+# doggy dash
+/doggydash http://www.active.com/ridgefield-ct/running/distance-running-races/joyride-ridgefield-and-kilometers-doggy-dash-5k-2015?int=
+/ddash15 http://www.active.com/ridgefield-ct/running/distance-running-races/joyride-ridgefield-and-kilometers-doggy-dash-5k-2015?int=
+/doggydash15 http://www.active.com/ridgefield-ct/running/distance-running-races/joyride-ridgefield-and-kilometers-doggy-dash-5k-2015?int=
+
+# wilton continuing ed intro class
+/intro https://www.wiltoncontinuinged.org/CourseCatalog/ScheduleView.asp?ScheduleId=5665
+
+# march mania
+/marchmania https://docs.google.com/forms/d/1UIKTTjj9RztycBGpidwgQdyU6wCUTmcwDoytKd4Dp_I/viewform
+
+/cindy http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&instructorid=5
+
+/summerjoy http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseSpot&classid=2500
+
