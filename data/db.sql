@@ -813,4 +813,18 @@ create view vseriesrevenue as select c.id, c.firstname, c.lastname, c.emailaddre
 
 create view vavgcostperride as select *, seriesrevenue/numrides as avgcostperride from vseriesrevenue;
 
+create view vnumridesnummonths as select c.id, c.firstname, c.lastname, c.emailaddress, 
+(select count(*) from attend where custid=c.id) as numrides, 
+((select julianday((select max(classdate) from attend where custid=c.id)))-(select julianday((select min(classdate) 
+from attend where custid=c.id)))) / 30.0  as months 
+from cust c;
+
+create view vavgridespermonthbyseries as select v.firstname, v.lastname, v.emailaddress, 
+numrides, months, numrides/months as avgridespermonth, o.series 
+from vnumridesnummonths v join openseries o on v.emailaddress=o.emailaddress;
+
+/* show average rides per month for people who currently have an open series */
+select series, sum(numrides), sum(months), sum(numrides)/sum(months) from vavgridespermonthbyseries group by series order by series; 
+
+
 
