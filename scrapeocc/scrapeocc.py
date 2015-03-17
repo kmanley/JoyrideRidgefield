@@ -43,7 +43,7 @@ CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?acti
 
 CAPACITY = {"westport":46, 
 			"darien":40, 
-            "ridgefield":40,
+            "ridgefield":44,
             "texas":35,}
 
 TODAY = datetime.date.today()
