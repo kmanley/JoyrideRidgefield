@@ -15,34 +15,45 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
-#SITENAMES = ["westport", "darien", "ridgefield", "texas"]
-SITENAMES = ["westport", "darien", "ridgefield", "texas"]
+SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
+		   "westport2" : "http://www.joyridestudio.com",
            "darien" : "http://www.joyridestudio.com",
-           "ridgefield" : "http://www.joyrideridgefield.com",
-           "texas" : "http://www.joyridetexas.com"}
+           "darien2" : "http://www.joyridestudio.com",
+           "ridgefield" : "http://www.joyridestudio.com",
+           "texas" : "http://www.joyridestudio.com"}
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
 
-LOGINGET = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
-            "darien"   : "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
-            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=Account.login",
-            "texas" : "http://www.joyridetexas.com/reserve/index.cfm?action=Account.login"}
+LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
+		    "westport2"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
+            "darien"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
+            "darien2"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
+            "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", #"http://www.joyrideridgefield.com/reserve/index.cfm?action=Account.login",
+            "texas"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", #"http://www.joyridetexas.com/reserve/index.cfm?action=Account.login"
+            }
 
 LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "darien"   : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "ridgefield" : "http://www.joyrideridgefield.com/reserve/index.cfm?action=",
-            "texas" : "http://www.joyridetexas.com/reserve/index.cfm?action="}
+			"westport2" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
+            "darien"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
+            "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
+            "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", #"http://www.joyrideridgefield.com/reserve/index.cfm?action=",
+            "texas"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", #"http://www.joyridetexas.com/reserve/index.cfm?action="
+            }
 
-CALENDARGET = {"westport":  "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
+CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", # "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
+			   "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", # "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
 	           "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
-               "ridgefield":"http://www.joyrideridgefield.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
-               "texas":"http://www.joyridetexas.com/reserve/index.cfm?action=Reserve.chooseClass",
+	           "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
+               "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
+               "texas":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
                } 
 
 CAPACITY = {"westport":46, 
+            "westport2":20,
 			"darien":40, 
+			"darien2":20,
             "ridgefield":44,
             "texas":35,}
 
@@ -52,7 +63,9 @@ TOMORROW = TODAY + datetime.timedelta(days=1)
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
 # so we need to extract date/time/instructor here instead of in getOccupancy
 def getBookableLinks(site, cookies):
-	r = requests.get(CALENDARGET[site], headers=USERAGENT, cookies=cookies)
+	url = CALENDARGET[site]
+	log.info("requesting %s" % url)
+	r = requests.get(url, headers=USERAGENT, cookies=cookies)
 	soup = BS(r.text)
 	blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
 	for block in blocks:

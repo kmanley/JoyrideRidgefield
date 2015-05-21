@@ -15,7 +15,7 @@ conn = sqlite3.connect("occupancy.db")
 def get_table(dt):
     io = StringIO.StringIO()
     #curs = conn.cursor()
-    rows = list(conn.cursor().execute("select * from v_occ where date(dt) = ? order by case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end, dt;", (dt,)).fetchall())
+    rows = list(conn.cursor().execute("select * from v_occ where date(dt) = ? order by case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 when site='westport2' then 5 when site='darien2' then 6 else site end, dt;", (dt,)).fetchall())
     #rows = curs.fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Date/time</th><th>Studio</th><th>Instr/Count</th><th>Sold</th><th>Total</th><th>Occ%</th></tr>")
@@ -37,7 +37,7 @@ def get_table(dt):
 def get_history_by_studio():
     io = StringIO.StringIO()
     #curs = conn.cursor()
-    rows = list(conn.cursor().execute("select * from vw_occyymm where yymm>=strftime('%Y-%m',date('now','-2 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end;").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_occyymm where yymm>=strftime('%Y-%m',date('now','-2 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 when site='westport2' then 5 when site='darien2' then 6 else site end;").fetchall())
     #rows = curs.fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Month</th><th>Studio</th><th>Classes</th><th>Sold</th><th>Avail</th><th>Avg/Day</th><th>Avg/Cls</th><th>Occ%</th></tr>")
@@ -53,7 +53,7 @@ def get_history_by_studio():
 def get_history_by_instr():
     io = StringIO.StringIO()
     #curs = conn.cursor()
-    rows = list(conn.cursor().execute("select * from vw_occyymmbyinstr where yymm>=strftime('%Y-%m',date('now','-1 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 else site end, instrex;").fetchall())
+    rows = list(conn.cursor().execute("select * from vw_occyymmbyinstr where yymm>=strftime('%Y-%m',date('now','-1 months','start of month')) order by yymm, case when site='ridgefield' then 1 when site='westport' then 2 when site='darien' then 3 when site='texas' then 4 when site='westport2' then 5 when site='darien2' then 6 else site end, instrex;").fetchall())
     #rows = curs.fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Month</th><th>Studio</th><th>Instr</th><th>Classes</th><th>Sold</th><th>Avail</th><th>Avg/Cls</th><th>Occ%</th></tr>")
@@ -68,7 +68,7 @@ def send_report(report, subj):
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
 	    to_addr=['kevin.manley@gmail.com', 
-                      'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com',
+                     # 'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com',
                       ],
 	    subject=subj,
 	    html_body=report
