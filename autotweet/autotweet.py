@@ -21,12 +21,13 @@ r = requests.get("http://www.%s/admin/" % baseurl, allow_redirects=True)
 cookies = r.cookies
 formdata = {'action': 'Sec.doLogin', 'username': username, 'password':password}
 r = requests.post("http://www.%s/admin/index.cfm?action=" % baseurl, data=formdata, cookies=cookies, allow_redirects=False)
-r = requests.get("http://www.%s/admin/index.cfm?action=Booker.view&roomid=1" % baseurl, cookies=cookies)
+r = requests.get("http://www.%s/admin/index.cfm?action=Booker.view&roomid=10" % baseurl, cookies=cookies)
 #open("/tmp/autotweet.html","w").write(r.text) 
 soup = BS(r.text)
-lis = soup.findAll("li", attrs={"class":"nav-header"})
+lis = soup.findAll("h5", attrs={"class":"nav-header"})
 found = False
 for li in lis:
+    #print li.text
     if li.text == starget_date:
         found = True
         break
@@ -35,15 +36,15 @@ if not found:
     sys.exit(1)
 
 classes = []
-sib = li.findNextSibling()
-while sib.text.count("-") >= 2:
-    parts = sib.text.split(" - ")
+sublis = li.findNextSibling().findAll("li")
+for subli in sublis: #while sib.text.count("-") >= 2:
+    parts = subli.text.split(" - ")
     if len(parts) != 3:
-        log.warning("didn't find expected 3 part class description: %s" % sib.text)
+        log.warning("didn't find expected 3 part class description: %s" % subli.text)
         sys.exit(3)
     parts[0] = datetime.datetime.strptime(parts[0], "%I:%M %p")
     classes.append(parts)
-    sib = sib.findNextSibling()
+    #sib = sib.findNextSibling()
 
 if not classes:
     log.warning("no classes found")
