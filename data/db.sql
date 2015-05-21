@@ -347,6 +347,10 @@ where date(c.datecreated) >= date('now', '-360 days') and a.classdate is null
 and c.id not in (select id from vw_fashionshowcusts) order by datecreated;
 
 
+select c.emailaddress from cust c left outer join attend a on c.id=a.custid and a.status='Enrolled' 
+where date(c.datecreated) >= date('2015-03-01') and a.classdate is null 
+and c.id not in (select id from vw_fashionshowcusts) order by datecreated;
+
 --create view v_totalsalesbyitem as select item, sum(total) from sale group by item order by sum(total) desc;
 
 --TODO: create new customers query too
@@ -826,5 +830,48 @@ from vnumridesnummonths v join openseries o on v.emailaddress=o.emailaddress;
 /* show average rides per month for people who currently have an open series */
 select series, sum(numrides), sum(months), sum(numrides)/sum(months) from vavgridespermonthbyseries group by series order by series; 
 
+/* Note: for 2014 need to manually exclude series used for charity events since we used
+   to let people pay via zingfit until 2/3 through the year */
+create view vwsales2014 as select  item, count(*), sum(total) 
+from sale 
+where (date(dt) >= date('2014-01-01') and date(dt) <= date('2014-12-31')) 
+and pmtype not in ('Comp', 'Store Credit') 
+group by item
+order by typ, item;
+
+/* more advanced query to find specifically lapsed customers
+   NOTE: must tweak dates and numbers to suit */
+select c.emailaddress from cust c 
+where 
+-- customer came X times between A and B
+(select count(*) from attend a where a.custid=c.id and a.status='Enrolled' and 
+   a.classdate between date('2015-01-01') and date('2015-02-28')) > 5 
+and 
+-- but customer didn't come at all after C
+(select count(*) from attend a2 where a2.custid=c.id and a2.status='Enrolled' and 
+  a2.classdate >= date('2015-03-01')) < 1;
+  
+/* find users who had lots of series expire - given the data we are able to export
+   from zingfit currently the easiest way to do this is to look for customers who
+   have an abnormally high avg price per class */
+select * from vavgcostperride order by avgcostperride desc limit X;
+
+/* customers who had their first ride free between dates A and B but never came
+   back after C - this is just a variant of the lapsed query above */
+select c.emailaddress from cust c 
+where 
+-- customer came 1 time between A and B
+(select count(*) from attend a where a.custid=c.id and a.status='Enrolled' and 
+   a.classdate between date('2015-03-01') and date('2015-12-31')) = 1 
+and 
+-- but customer hasn't come back since C
+(select count(*) from attend a2 where a2.custid=c.id and a2.status='Enrolled' and 
+  a2.classdate >= date('2015-05-01')) < 1;
+
+
+
+
+
+     
 
 
