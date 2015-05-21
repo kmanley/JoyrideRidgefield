@@ -1,4 +1,5 @@
 # Quick and dirty script to auto-tweet 
+# NOTE: uses python-twitter module (sudo pip install python-twitter)
 import os
 import sys
 import StringIO
