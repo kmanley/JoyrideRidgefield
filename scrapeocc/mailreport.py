@@ -65,39 +65,39 @@ def get_history_by_instr():
     return io.getvalue()      
 
 def send_report(report, subj):
-	envelope = Envelope(
-	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
-	    to_addr=['kevin.manley@gmail.com', 
-                     'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com',
+    envelope = Envelope(
+        from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
+        to_addr=['kevin.manley@gmail.com', 
+                    'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com',
                       ],
-	    subject=subj,
-	    html_body=report
-	)
+        subject=subj,
+        html_body=report
+    )
 
-	# Send the envelope using an ad-hoc connection...
-	envelope.send('smtp.googlemail.com', login=secrets[0], password=secrets[1],
-					tls=True, port=587)
+    # Send the envelope using an ad-hoc connection...
+    envelope.send('smtp.googlemail.com', login=secrets[0], password=secrets[1],
+              tls=True, port=587)
 
 def main():
-	io = StringIO.StringIO()
-	io.write("<html><body>")
-	io.write("Figures are approx 2% lower than actual since enrollments after start time aren't counted<br/>")
-	io.write("<h4>Today</h4>")
-	io.write(get_table(TODAY))
-	io.write("<h4>Tomorrow</h4>")
-	io.write(get_table(TOMORROW))
-	io.write("<h4>Historical Summary by Studio</h4>")
-	io.write(get_history_by_studio())
-	io.write("<h4>Historical Summary by Instructor</h4>")
-	io.write(get_history_by_instr())
-	io.write("</body></html>")
-	if dryRun:
-		filename = "/tmp/test.html"
-		print "dryRun: wrote %s" % filename
-		with open(filename, "wb") as fp:
-			fp.write(io.getvalue())    
-	else:
-		send_report(io.getvalue(), 'Occupancy report %s - %s' % (str(TODAY), str(TOMORROW)))
+    io = StringIO.StringIO()
+    io.write("<html><body>")
+    io.write("Figures are approx 2% lower than actual since enrollments after start time aren't counted<br/>")
+    io.write("<h4>Today</h4>")
+    io.write(get_table(TODAY))
+    io.write("<h4>Tomorrow</h4>")
+    io.write(get_table(TOMORROW))
+    io.write("<h4>Historical Summary by Studio</h4>")
+    io.write(get_history_by_studio())
+    io.write("<h4>Historical Summary by Instructor</h4>")
+    io.write(get_history_by_instr())
+    io.write("</body></html>")
+    if dryRun:
+        filename = "/tmp/test.html"
+        print "dryRun: wrote %s" % filename
+        with open(filename, "wb") as fp: 
+            fp.write(io.getvalue())    
+    else:
+        send_report(io.getvalue(), 'Occupancy report %s - %s' % (str(TODAY), str(TOMORROW)))
         
     
 

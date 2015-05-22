@@ -15,14 +15,19 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
-SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas"]
+SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
+             "studio22", "shiftg", "shiftnh"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
-		   "westport2" : "http://www.joyridestudio.com",
+           "westport2" : "http://www.joyridestudio.com",
            "darien" : "http://www.joyridestudio.com",
            "darien2" : "http://www.joyridestudio.com",
            "ridgefield" : "http://www.joyridestudio.com",
-           "texas" : "http://www.joyridestudio.com"}
+           "texas" : "http://www.joyridestudio.com",
+           "studio22" : "http://www.studio22fitness.com",
+           "shiftg" : "http://www.shiftcycling.com",
+           "shiftnh" : "http://www.shiftcycling.com",
+   }
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
 
@@ -30,24 +35,33 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
 		    "westport2"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien2"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
-            "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", #"http://www.joyrideridgefield.com/reserve/index.cfm?action=Account.login",
-            "texas"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", #"http://www.joyridetexas.com/reserve/index.cfm?action=Account.login"
+            "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
+            "texas"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
+            "studio22"  :  "http://www.studio22fitness.com/reserve/index.cfm?action=Account.login", 
+            "shiftg"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
+            "shiftnh"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
             }
 
 LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
 			"westport2" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", #"http://www.joyrideridgefield.com/reserve/index.cfm?action=",
-            "texas"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", #"http://www.joyridetexas.com/reserve/index.cfm?action="
+            "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "texas"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "studio22"  : "http://www.studio22fitness.com/reserve/index.cfm?action=", 
+            "shiftg"    : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
+            "shiftnh"   : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
             }
 
-CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", # "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
-			   "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", # "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&n=Westport&roomid=1",
+CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", 
+			   "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", 
 	           "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
 	           "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
                "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
                "texas":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
+               "studio22":"http://www.studio22fitness.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
+               "shiftg": "http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
+               "shiftnh":"http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=2",
                } 
 
 CAPACITY = {"westport":46, 
@@ -55,7 +69,10 @@ CAPACITY = {"westport":46,
 			"darien":40, 
 			"darien2":20,
             "ridgefield":44,
-            "texas":35,}
+            "texas":35,
+            "studio22":32,
+            "shiftg":29,
+			"shiftnh":39}
 
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
@@ -63,48 +80,48 @@ TOMORROW = TODAY + datetime.timedelta(days=1)
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
 # so we need to extract date/time/instructor here instead of in getOccupancy
 def getBookableLinks(site, cookies):
-	url = CALENDARGET[site]
-	log.info("requesting %s" % url)
-	r = requests.get(url, headers=USERAGENT, cookies=cookies)
-	soup = BS(r.text)
-	blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
-	for block in blocks:
-	    #print block
-	    link = block.find("a")
-	    if link:
-                classtype = link.span.text.lower()
-		# we changed links to filter by room, so don't have to guess if it's a cycle class based on name anymore
-		if True:
-		#if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
-                    day = int(link.parent.parent["class"][3:].split(" ")[0])
-                    sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
-                    dateparts = sdate.split(".")
-                    month = int(dateparts[0])
-                    day = int(dateparts[1])
-       		    instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
-		    stime = block.find("span", attrs={"class":"scheduleTime active"}).text
-                    # 11:00 AM60min
-                    hour = int(stime.split(":")[0])
-                    minute = int(stime.split(" ")[0].split(":")[-1])
-                    if stime.split(" ")[1].startswith("PM") and hour < 12:
-                        hour += 12
-                    if block["class"].find("classfull") > -1:
-                        soldout = True
-                    else:
-                        soldout = False
-                    year = (datetime.date(TODAY.year, TODAY.month, 1) + datetime.timedelta(days=day-1)).year
-                    if datetime.date(year, month, day) < TODAY:
-						year += 1
-                    dt = datetime.datetime(year, month, day, hour, minute, 0)
-                    yield dt, instr, soldout, link.get("href")
-	    else:
-		pass #not bookable - class is in past or cancelled
+    url = CALENDARGET[site]
+    log.info("requesting %s" % url)
+    r = requests.get(url, headers=USERAGENT, cookies=cookies)
+    soup = BS(r.text)
+    blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
+    for block in blocks:
+        #print block
+        link = block.find("a")
+        if link:
+        #    classtype = link.span.text.lower()
+        # we changed links to filter by room, so don't have to guess if it's a cycle class based on name anymore
+            if True:
+            #if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
+                day = int(link.parent.parent["class"][3:].split(" ")[0])
+                sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
+                dateparts = sdate.split(".")
+                month = int(dateparts[0])
+                day = int(dateparts[1])
+                instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
+                stime = block.find("span", attrs={"class":"scheduleTime active"}).text
+                # 11:00 AM60min
+                hour = int(stime.split(":")[0])
+                minute = int(stime.split(" ")[0].split(":")[-1])
+                if stime.split(" ")[1].startswith("PM") and hour < 12:
+                    hour += 12
+                if block["class"].find("classfull") > -1:
+                    soldout = True
+                else:
+                    soldout = False
+                year = (datetime.date(TODAY.year, TODAY.month, 1) + datetime.timedelta(days=day-1)).year
+                if datetime.date(year, month, day) < TODAY:
+                    year += 1
+                dt = datetime.datetime(year, month, day, hour, minute, 0)
+                yield dt, instr, soldout, link.get("href")
+        else:
+            pass #not bookable - class is in past or cancelled
 
 def getOccupancy(site, url, cookies):
     #print "%s%s" % (BASEURL[site], url)
     #print cookies
     r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
-    open("class_example.html","wb").write(r.text)
+    #open("class_example.html","wb").write(r.text)
     soup = BS(r.text)
     #print r.text
     #details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
@@ -191,8 +208,10 @@ def processSite(sitename, saveToDB=False):
         sum_total += total
         if saveToDB:
             curs = conn.cursor()
-            curs.execute("insert or ignore into occ (dt, site) values (?, ?)", (dt, sitename))
-            curs.execute("update occ set instr=?, unavail=?, total=? where dt=? and site=?", (instr, unavail, total, dt, sitename))
+            #curs.execute("insert or ignore into occ (dt, site) values (?, ?)", (dt, sitename))
+            #curs.execute("update occ set instr=?, unavail=?, total=? where dt=? and site=?", (instr, unavail, total, dt, sitename))
+            curs.execute("delete from occ where dt=? and site=?", (dt, sitename))
+            curs.execute("insert into occ (dt, site, instr, unavail, total) values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
             conn.commit()
 
 def main(saveToDB=False, site=None):
