@@ -16,7 +16,7 @@ log.setLevel(logging.WARNING)
 conn = sqlite3.connect("occupancy.db")
 
 SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
-             "studio22", "shiftg", "shiftnh"]
+             "studio22", "shiftg", "shiftnh", "zenride"] # TODO: scwestport
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
@@ -27,12 +27,13 @@ BASEURL = {"westport" : "http://www.joyridestudio.com",
            "studio22" : "http://www.studio22fitness.com",
            "shiftg" : "http://www.shiftcycling.com",
            "shiftnh" : "http://www.shiftcycling.com",
+           "zenride" : "http://www.zen-ride.com",
    }
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
 
 LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
-		    "westport2"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
+            "westport2"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien2"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
@@ -40,10 +41,11 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
             "studio22"  :  "http://www.studio22fitness.com/reserve/index.cfm?action=Account.login", 
             "shiftg"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
             "shiftnh"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
+            "zenride"  :  "http://www.zen-ride.com/reserve/index.cfm?action=Account.login", 
             }
 
 LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-			"westport2" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
+            "westport2" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
@@ -51,28 +53,32 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
             "studio22"  : "http://www.studio22fitness.com/reserve/index.cfm?action=", 
             "shiftg"    : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
             "shiftnh"   : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
+            "zenride"   : "http://www.zen-ride.com/reserve/index.cfm?action=", 
             }
 
 CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", 
-			   "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", 
-	           "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
-	           "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
+               "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", 
+               "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
+               "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
                "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
                "texas":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
                "studio22":"http://www.studio22fitness.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
                "shiftg": "http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                "shiftnh":"http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=2",
+               "zenride":"http://www.zen-ride.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                } 
 
 CAPACITY = {"westport":46, 
             "westport2":20,
-			"darien":40, 
-			"darien2":20,
+            "darien":40, 
+            "darien2":20,
             "ridgefield":44,
             "texas":35,
             "studio22":32,
             "shiftg":29,
-			"shiftnh":39}
+            "shiftnh":39,
+            "scwestport":56,
+            "zenride":36}
 
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
@@ -170,7 +176,7 @@ def loginGetCookies(sitename):
     r = requests.post(LOGINPOST[sitename], data=formdata, headers=USERAGENT, cookies=cookies, allow_redirects=False)
     return cookies
 
-def processSite(sitename, saveToDB=False):
+def processSiteZingfit(sitename, saveToDB=False):
     sum_unavail = sum_total = 0
     cookies = loginGetCookies(sitename)
     lastdt = None
@@ -186,7 +192,7 @@ def processSite(sitename, saveToDB=False):
                 else:
                     prefix = ""
                 print "%soccupancy for %s: %d/%d = %.1f%%" % (prefix, lastdt, sum_unavail, 
-			sum_total, float(sum_unavail)/sum_total*100.)
+            sum_total, float(sum_unavail)/sum_total*100.)
             print
             sum_unavail = sum_total = 0
         if dt.date() > TOMORROW:
@@ -214,11 +220,48 @@ def processSite(sitename, saveToDB=False):
             curs.execute("insert into occ (dt, site, instr, unavail, total) values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
             conn.commit()
 
+def processSiteSC(sitename, saveToDB=False):
+    getBookableLinksSC(sitename, saveToDB)
+    
+    
+def getBookableLinksSC(sitename, saveToDB=False):
+    SCHEDULEURLS = {"scwestport":"https://www.soul-cycle.com/find-a-class/studio/1026/"}
+    url = SCHEDULEURLS[sitename]
+    r = requests.get(url, headers=USERAGENT)
+    #open(r"/tmp/sc.html", "w").write(r.text.encode("utf-8"))
+    soup = BS(r.text)
+    dt = TOMORROW.strftime("%b %d, %Y")
+    blocks = soup.findAll("div", attrs={"class":["column-day "]})
+    for block in blocks:   
+        if block["data-date"] == dt:
+            times = block.findAll("span", attrs={"class":["time"]})
+            for time in times:
+                hh = int(time.text.split(":")[0])
+                mm = int(time.text.split(":")[-1][:2])
+                ampm = time.text.split(":")[-1][-2:]
+                if ampm == "PM":
+                    hh += 12
+                #print hh, mm
+                dt = datetime.datetime(TOMORROW.year, TOMORROW.month, TOMORROW.day,
+                                        hh, mm, 0)
+                instr = time.nextSibling().findAll("a")[0].text
+                #instr = time.nextSibling()
+                #.findAll("a")[0].text
+                
+                print time, dt, instr
+            #print block
+    
+    #yield dt, instr, soldout, link.get("href")
+
+
 def main(saveToDB=False, site=None):
     sitenames = [site] if site else SITENAMES
     for sitename in sitenames:
         print sitename
-        processSite(sitename, saveToDB)
+        if sitename=="scwestport":
+            processSiteSC(sitename, saveToDB)
+        else:
+            processSiteZingfit(sitename, saveToDB)
         print "-" * 80
 
 if __name__ == "__main__":
