@@ -97,7 +97,9 @@ if "-a" in sys.argv or (raw_input("tweet it? ").lower() == "y"):
     try:
         api.PostUpdate(tweet)
     except Exception as e:
-        os.system("""echo "%s" | mail -s "autotweet FAILED" kevin.manley@gmail.com""" % (str(e)+" ("+tweet+")"))
+        log.exception("failed to post update to Twitter")
+        os.system("""echo "%s" | mail -s "autotweet FAILED" -f "root@joyrd.link" kevin.manley@gmail.com""" % (str(e)+" ("+tweet+")"))
     else:
-        os.system("""echo "%s" | mail -s "autotweet SUCCESS" kevin.manley@gmail.com""" % tweet)
+        log.info("successfully posted to Twitter")
+        os.system("""echo "%s" | mail -s "autotweet SUCCESS" -f "root@joyrd.link" kevin.manley@gmail.com""" % tweet)
 
