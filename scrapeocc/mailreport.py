@@ -68,7 +68,8 @@ def send_report(report, subj):
     envelope = Envelope(
         from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
         to_addr=['kevin.manley@gmail.com', 
-                    'amypal@joyrideridgefield.com', 'corey@joyrideridgefield.com',
+                    'amypal@joyrideridgefield.com', 
+                    #'corey@joyrideridgefield.com',
                       ],
         subject=subj,
         html_body=report
