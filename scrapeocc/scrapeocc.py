@@ -5,7 +5,8 @@ import StringIO
 import requests
 import logging
 import twitter
-from BeautifulSoup import BeautifulSoup as BS
+#from BeautifulSoup import BeautifulSoup as BS
+from bs4 import BeautifulSoup as BS
 import datetime
 secrets = open(".secret").read().strip().split(";")
 username, password = secrets
@@ -16,7 +17,7 @@ log.setLevel(logging.WARNING)
 conn = sqlite3.connect("occupancy.db")
 
 SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
-             "studio22", "shiftg", "shiftnh", "zenride"] # TODO: scwestport
+             "studio22", "shiftg", "shiftnh", "zenride", "tribe"] # TODO: scwestport
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
@@ -28,6 +29,7 @@ BASEURL = {"westport" : "http://www.joyridestudio.com",
            "shiftg" : "http://www.shiftcycling.com",
            "shiftnh" : "http://www.shiftcycling.com",
            "zenride" : "http://www.zen-ride.com",
+           "tribe" : "http://www.unitethetribe.com",
    }
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
@@ -42,6 +44,7 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
             "shiftg"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
             "shiftnh"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
             "zenride"  :  "http://www.zen-ride.com/reserve/index.cfm?action=Account.login", 
+            "tribe" : "http://www.unitethetribe.com/reserve/index.cfm?action=Account.login", 
             }
 
 LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
@@ -54,6 +57,7 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
             "shiftg"    : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
             "shiftnh"   : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
             "zenride"   : "http://www.zen-ride.com/reserve/index.cfm?action=", 
+            "tribe"     : "http://www.unitethetribe.com/reserve/index.cfm?action=", 
             }
 
 CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", 
@@ -66,6 +70,7 @@ CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?actio
                "shiftg": "http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                "shiftnh":"http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=2",
                "zenride":"http://www.zen-ride.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
+               "tribe" : "http://www.unitethetribe.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                } 
 
 CAPACITY = {"westport":46, 
@@ -78,10 +83,12 @@ CAPACITY = {"westport":46,
             "shiftg":29,
             "shiftnh":39,
             "scwestport":56,
-            "zenride":36}
+            "zenride":36,
+            "tribe":34}
 
 TODAY = datetime.date.today()
 TOMORROW = TODAY + datetime.timedelta(days=1)
+#TODAY = TOMORROW
 
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
 # so we need to extract date/time/instructor here instead of in getOccupancy
@@ -89,29 +96,44 @@ def getBookableLinks(site, cookies):
     url = CALENDARGET[site]
     log.info("requesting %s" % url)
     r = requests.get(url, headers=USERAGENT, cookies=cookies)
-    soup = BS(r.text)
+    #open("/tmp/tribe.html", "w").write(r.text) # TODO:
+    soup = BS(r.text) #, "html.parser")
     blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
+    #print "%d blocks" % len(blocks)
     for block in blocks:
+        #print "*" * 50
         #print block
+        #print "*"
+        #print
         link = block.find("a")
         if link:
         #    classtype = link.span.text.lower()
         # we changed links to filter by room, so don't have to guess if it's a cycle class based on name anymore
             if True:
             #if ("cycle" in classtype) or ("tabata" in classtype) or ("ride" in classtype) or (site=="ridgefield"):
-                day = int(link.parent.parent["class"][3:].split(" ")[0])
-                sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
-                dateparts = sdate.split(".")
-                month = int(dateparts[0])
-                day = int(dateparts[1])
-                instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
-                stime = block.find("span", attrs={"class":"scheduleTime active"}).text
+                #print link.parent.parent["class"]
+                if site=="tribe":
+                    #print link.parent.parent["id"]
+                    sdate = link.parent.parent["id"]
+                    day = int(sdate[9:])
+                    month = int(sdate[7:9])
+                    #print "!!!", month, day
+                    instr = block.find("span", attrs={"class":"scheduleInstruc"}).text
+                    stime = block.find("span", attrs={"class":"scheduleTime"}).text
+                else:
+                    day = int(link.parent.parent["class"][0][3:].split(" ")[0])
+                    sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
+                    dateparts = sdate.split(".")
+                    month = int(dateparts[0])
+                    day = int(dateparts[1])
+                    instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
+                    stime = block.find("span", attrs={"class":"scheduleTime active"}).text
                 # 11:00 AM60min
                 hour = int(stime.split(":")[0])
                 minute = int(stime.split(" ")[0].split(":")[-1])
                 if stime.split(" ")[1].startswith("PM") and hour < 12:
                     hour += 12
-                if block["class"].find("classfull") > -1:
+                if block["class"][0].find("classfull") > -1:
                     soldout = True
                 else:
                     soldout = False
@@ -119,6 +141,7 @@ def getBookableLinks(site, cookies):
                 if datetime.date(year, month, day) < TODAY:
                     year += 1
                 dt = datetime.datetime(year, month, day, hour, minute, 0)
+                #print dt, instr, soldout, link.get("href")
                 yield dt, instr, soldout, link.get("href")
         else:
             pass #not bookable - class is in past or cancelled
@@ -158,7 +181,7 @@ def getOccupancy(site, url, cookies):
         if item.name == "span":
             # span class is "spotcell Enrolled" for real booking
             # it's "spotcell Unavailable" for held spot; we only count real bookings
-            if item["class"].lower().find("enrolled")>-1:
+            if "".join(item["class"]).lower().find("enrolled")>-1:
                 unavail += 1
             else:
                 avail += 1
@@ -181,7 +204,7 @@ def processSiteZingfit(sitename, saveToDB=False):
     cookies = loginGetCookies(sitename)
     lastdt = None
     for item in getBookableLinks(sitename, cookies):
-        #print item
+        #print "item",  item # TODO:
         dt, instr, soldout, url = item
         if lastdt and dt.date() > lastdt:
             # NOTE: it's *remaining* occupancy for today since it's only correct for the whole day until the point the first
