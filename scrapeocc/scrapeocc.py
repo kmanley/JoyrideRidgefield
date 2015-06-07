@@ -1,4 +1,4 @@
-# Quick and dirty hack to check occupancy for a site where we don't have admin
+# Quick and dirty hack to check occupancy for sites where we don't have admin
 import sys
 import sqlite3
 import StringIO
@@ -133,10 +133,11 @@ def getBookableLinks(site, cookies):
                 minute = int(stime.split(" ")[0].split(":")[-1])
                 if stime.split(" ")[1].startswith("PM") and hour < 12:
                     hour += 12
-                if block["class"][0].find("classfull") > -1:
+                if " ".join(block["class"]).find("classfull") > -1:
                     soldout = True
                 else:
                     soldout = False
+                
                 year = (datetime.date(TODAY.year, TODAY.month, 1) + datetime.timedelta(days=day-1)).year
                 if datetime.date(year, month, day) < TODAY:
                     year += 1
@@ -147,6 +148,7 @@ def getBookableLinks(site, cookies):
             pass #not bookable - class is in past or cancelled
 
 def getOccupancy(site, url, cookies):
+    #print "getOcc %s" % url
     #print "%s%s" % (BASEURL[site], url)
     #print cookies
     r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
