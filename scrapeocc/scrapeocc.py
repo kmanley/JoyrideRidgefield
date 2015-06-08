@@ -17,7 +17,7 @@ log.setLevel(logging.WARNING)
 conn = sqlite3.connect("occupancy.db")
 
 SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
-             "studio22", "shiftg", "shiftnh", "zenride", "tribe"] # TODO: scwestport
+             "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scwestport"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
@@ -30,6 +30,7 @@ BASEURL = {"westport" : "http://www.joyridestudio.com",
            "shiftnh" : "http://www.shiftcycling.com",
            "zenride" : "http://www.zen-ride.com",
            "tribe" : "http://www.unitethetribe.com",
+           "scwestport" : "http://www.soul-cycle.com",
    }
 
 USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
@@ -92,7 +93,7 @@ TOMORROW = TODAY + datetime.timedelta(days=1)
 
 # TODO: sold out classes (classfull class) have a link that does not contain date/time info, just a "sorry, class full msg"
 # so we need to extract date/time/instructor here instead of in getOccupancy
-def getBookableLinks(site, cookies):
+def getBookableLinksZingfit(site, cookies):
     url = CALENDARGET[site]
     log.info("requesting %s" % url)
     r = requests.get(url, headers=USERAGENT, cookies=cookies)
@@ -101,10 +102,6 @@ def getBookableLinks(site, cookies):
     blocks = soup.findAll("div", attrs={"class":["scheduleBlock", "scheduleBlock classfull"]})
     #print "%d blocks" % len(blocks)
     for block in blocks:
-        #print "*" * 50
-        #print block
-        #print "*"
-        #print
         link = block.find("a")
         if link:
         #    classtype = link.span.text.lower()
@@ -147,34 +144,10 @@ def getBookableLinks(site, cookies):
         else:
             pass #not bookable - class is in past or cancelled
 
-def getOccupancy(site, url, cookies):
-    #print "getOcc %s" % url
-    #print "%s%s" % (BASEURL[site], url)
-    #print cookies
+def getOccupancyZingfit(site, url, cookies):
     r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
-    #open("class_example.html","wb").write(r.text)
     soup = BS(r.text)
-    #print r.text
-    #details = soup.find("div", attrs={"class":"yui-u", "id":"sidebar"})
-    #if not details:
-    #    print "found sold out class %s" % url
-        #return datetime.datetime(1900,1,1,0,0,0), "Unknown", 0, 0, 100
-    #ps = details.findAll("p")
-    #date = ps[0].text.strip()[len("Date:")+5:]
-    #dateparts = date.split("/")
-    #month = int(dateparts[0])
-    #day = int(dateparts[1])
-    #year = 2000 + int(dateparts[2])
-    #time = ps[1].text.strip()[len("Time:"):]
-    #timeparts = time[:-1].split(":")
-    #hour = int(timeparts[0])
-    #minute = int(timeparts[1])
-    #if time[-1].lower() == "p" and hour < 12:
-    #    hour += 12
-    #dt = datetime.datetime(year, month, day, hour, minute, 0)
-    #instr = ps[2].text.strip()[len("Instructor:"):]
     block = soup.find("div", attrs={"id":"spotwrapper"})
-    #print "block: %s" % block
     avail = 0
     unavail = 0
     for item in block:
@@ -191,7 +164,6 @@ def getOccupancy(site, url, cookies):
             avail += 1
     total = avail + unavail
     occ = float(unavail) / total * 100.
-    #return dt, instr, unavail, total, occ
     return unavail, total, occ
 
 def loginGetCookies(sitename):
@@ -204,39 +176,23 @@ def loginGetCookies(sitename):
 def processSiteZingfit(sitename, saveToDB=False):
     sum_unavail = sum_total = 0
     cookies = loginGetCookies(sitename)
-    lastdt = None
-    for item in getBookableLinks(sitename, cookies):
+    for item in getBookableLinksZingfit(sitename, cookies):
         #print "item",  item # TODO:
         dt, instr, soldout, url = item
-        if lastdt and dt.date() > lastdt:
-            # NOTE: it's *remaining* occupancy for today since it's only correct for the whole day until the point the first
-            # class starts (because after that we can't scrape that class anymore). Better to use db for aggregations
-            if sum_total:
-                if lastdt == TODAY:
-                    prefix = "remaining "
-                else:
-                    prefix = ""
-                print "%soccupancy for %s: %d/%d = %.1f%%" % (prefix, lastdt, sum_unavail, 
-            sum_total, float(sum_unavail)/sum_total*100.)
-            print
-            sum_unavail = sum_total = 0
         if dt.date() > TOMORROW:
             #print "breaking because %s > %s" % (dt.date(), TOMORROW)
             break   
-        lastdt = dt.date()
         if soldout:
             unavail = total = CAPACITY[sitename]
             occ = 100.
         else:
-            unavail, total, occ = getOccupancy(sitename, url, cookies)
+            unavail, total, occ = getOccupancyZingfit(sitename, url, cookies)
         if total < CAPACITY[sitename]:
             # ktm 15 dec 14 - zingfit bug means we can no longer filter by room, so we get everything. only way to know
             # if it's non-cycle is to check room size, but that won't work if the non-cycle class is sold out. luckily they
             # don't seem to sell out.
             continue
         print str(dt), instr, "%d/%d" % (unavail,total), "%.1f%%" % occ
-        sum_unavail += unavail
-        sum_total += total
         if saveToDB:
             curs = conn.cursor()
             #curs.execute("insert or ignore into occ (dt, site) values (?, ?)", (dt, sitename))
@@ -246,38 +202,59 @@ def processSiteZingfit(sitename, saveToDB=False):
             conn.commit()
 
 def processSiteSC(sitename, saveToDB=False):
-    getBookableLinksSC(sitename, saveToDB)
-    
+    for dt, instr, _, url in getBookableLinksSC(sitename, saveToDB):
+        unavail, total, occ = getOccupancySC(sitename, url)
+        #print unavail, total, occ
+        print str(dt), instr, "%d/%d" % (unavail,total), "%.1f%%" % occ
+        if saveToDB:
+            curs = conn.cursor()
+            curs.execute("delete from occ where dt=? and site=?", (dt, sitename))
+            curs.execute("insert into occ (dt, site, instr, unavail, total) values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
+            conn.commit()
+        
+
+def getOccupancySC(site, url):
+    r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT)
+    #soup = BS(r.text)
+    #avail = len(soup.findAll("div", attrs={"class":["seat", "open"]}))
+    #unavail = len(soup.findAll("div", attrs={"class":["seat", "taken"]}))
+    avail = r.text.count("seat open")
+    unavail = r.text.count("seat taken")
+    total = avail + unavail
+    occ = float(unavail) / total * 100.
+    return unavail, total, occ
     
 def getBookableLinksSC(sitename, saveToDB=False):
     SCHEDULEURLS = {"scwestport":"https://www.soul-cycle.com/find-a-class/studio/1026/"}
     url = SCHEDULEURLS[sitename]
     r = requests.get(url, headers=USERAGENT)
     #open(r"/tmp/sc.html", "w").write(r.text.encode("utf-8"))
+    #print r.text
+    #print "got here"
     soup = BS(r.text)
-    dt = TOMORROW.strftime("%b %d, %Y")
-    blocks = soup.findAll("div", attrs={"class":["column-day "]})
+    #dt = TOMORROW.strftime("%b %d, %Y")
+    now = datetime.datetime.now()
+    blocks = soup.findAll("div", attrs={"class":["session", "open"]})
     for block in blocks:   
-        if block["data-date"] == dt:
-            times = block.findAll("span", attrs={"class":["time"]})
-            for time in times:
-                hh = int(time.text.split(":")[0])
-                mm = int(time.text.split(":")[-1][:2])
-                ampm = time.text.split(":")[-1][-2:]
-                if ampm == "PM":
-                    hh += 12
-                #print hh, mm
-                dt = datetime.datetime(TOMORROW.year, TOMORROW.month, TOMORROW.day,
-                                        hh, mm, 0)
-                instr = time.nextSibling().findAll("a")[0].text
-                #instr = time.nextSibling()
-                #.findAll("a")[0].text
-                
-                print time, dt, instr
-            #print block
+        #print block
+        dt = datetime.datetime.strptime(block.parent.parent["data-date"], "%B %d, %Y")
+        #print "***", dt
+        stm = block.find("span", attrs={"class":"time"}).text
+        #print "***", tm
+        hh = int(stm.split(":")[0])
+        mm = int(stm.split(":")[-1][:2])
+        ampm = stm[-2:]
+        if ampm=="PM":
+            hh += 12
+        instr = block.find("span", attrs={"class":"instructor"}).text.strip()
+        dt = datetime.datetime(dt.year, dt.month, dt.day, hh, mm)
+        url = block.find("a", attrs={"class":["open-modal", "reserve"]})
+        if url:
+            url = url["href"]
+        if dt >= now and dt.date() <= TOMORROW:
+            #print dt, instr, url
+            yield dt, instr, False, url
     
-    #yield dt, instr, soldout, link.get("href")
-
 
 def main(saveToDB=False, site=None):
     sitenames = [site] if site else SITENAMES
