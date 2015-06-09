@@ -17,7 +17,7 @@ log.setLevel(logging.WARNING)
 conn = sqlite3.connect("occupancy.db")
 
 SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
-             "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scwestport"]
+             "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scgreenwich", "scwestport"]
 
 BASEURL = {"westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
@@ -30,6 +30,7 @@ BASEURL = {"westport" : "http://www.joyridestudio.com",
            "shiftnh" : "http://www.shiftcycling.com",
            "zenride" : "http://www.zen-ride.com",
            "tribe" : "http://www.unitethetribe.com",
+           "scgreenwich" : "http://www.soul-cycle.com",
            "scwestport" : "http://www.soul-cycle.com",
    }
 
@@ -83,6 +84,7 @@ CAPACITY = {"westport":46,
             "studio22":32,
             "shiftg":29,
             "shiftnh":39,
+            "scgreenwich":60,
             "scwestport":56,
             "zenride":36,
             "tribe":34}
@@ -218,14 +220,19 @@ def getOccupancySC(site, url):
     #soup = BS(r.text)
     #avail = len(soup.findAll("div", attrs={"class":["seat", "open"]}))
     #unavail = len(soup.findAll("div", attrs={"class":["seat", "taken"]}))
-    avail = r.text.count("seat open")
-    unavail = r.text.count("seat taken")
+    if r.text.lower().find("the class you requested is full") >= 0:
+        avail = 0
+        unavail = CAPACITY[site]
+    else:
+        avail = r.text.count("seat open")
+        unavail = r.text.count("seat taken")
     total = avail + unavail
     occ = float(unavail) / total * 100.
     return unavail, total, occ
     
 def getBookableLinksSC(sitename, saveToDB=False):
-    SCHEDULEURLS = {"scwestport":"https://www.soul-cycle.com/find-a-class/studio/1026/"}
+    SCHEDULEURLS = {"scgreenwich":"https://www.soul-cycle.com/find-a-class/studio/212/",
+                    "scwestport":"https://www.soul-cycle.com/find-a-class/studio/1026/"}
     url = SCHEDULEURLS[sitename]
     r = requests.get(url, headers=USERAGENT)
     #open(r"/tmp/sc.html", "w").write(r.text.encode("utf-8"))
@@ -240,11 +247,11 @@ def getBookableLinksSC(sitename, saveToDB=False):
         dt = datetime.datetime.strptime(block.parent.parent["data-date"], "%B %d, %Y")
         #print "***", dt
         stm = block.find("span", attrs={"class":"time"}).text
-        #print "***", tm
+        #print "***", stm
         hh = int(stm.split(":")[0])
         mm = int(stm.split(":")[-1][:2])
         ampm = stm[-2:]
-        if ampm=="PM":
+        if ampm=="PM" and hh < 12:
             hh += 12
         instr = block.find("span", attrs={"class":"instructor"}).text.strip()
         dt = datetime.datetime(dt.year, dt.month, dt.day, hh, mm)
@@ -260,7 +267,7 @@ def main(saveToDB=False, site=None):
     sitenames = [site] if site else SITENAMES
     for sitename in sitenames:
         print sitename
-        if sitename=="scwestport":
+        if sitename in ("scgreenwich", "scwestport"):
             processSiteSC(sitename, saveToDB)
         else:
             processSiteZingfit(sitename, saveToDB)
