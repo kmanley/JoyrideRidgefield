@@ -16,10 +16,11 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
-SITENAMES = ["westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
+SITENAMES = ["wilton", "westport", "westport2", "darien", "darien2", "ridgefield", "texas", 
              "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scgreenwich", "scwestport"]
 
-BASEURL = {"westport" : "http://www.joyridestudio.com",
+BASEURL = {"wilton" : "http://www.joyridestudio.com",
+          "westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
            "darien" : "http://www.joyridestudio.com",
            "darien2" : "http://www.joyridestudio.com",
@@ -41,6 +42,7 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
             "darien"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "darien2"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
+            "wilton":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
             "texas"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
             "studio22"  :  "http://www.studio22fitness.com/reserve/index.cfm?action=Account.login", 
             "shiftg"  :  "http://www.shiftcycling.com/reserve/index.cfm?action=Account.login", 
@@ -54,6 +56,7 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
             "darien"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
             "texas"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", 
             "studio22"  : "http://www.studio22fitness.com/reserve/index.cfm?action=", 
             "shiftg"    : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
@@ -67,6 +70,7 @@ CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?actio
                "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
                "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
                "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
+               "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7",
                "texas":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
                "studio22":"http://www.studio22fitness.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
                "shiftg": "http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
@@ -77,6 +81,7 @@ CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?actio
 
 CAPACITY = {"westport":46, 
             "westport2":20,
+            "wilton":36,
             "darien":40, 
             "darien2":20,
             "ridgefield":44,
@@ -117,16 +122,16 @@ def getBookableLinksZingfit(site, cookies):
                     day = int(sdate[9:])
                     month = int(sdate[7:9])
                     #print "!!!", month, day
-                    instr = block.find("span", attrs={"class":"scheduleInstruc"}).text
-                    stime = block.find("span", attrs={"class":"scheduleTime"}).text
+                    instr = block.find("span", attrs={"class":"scheduleInstruc"}).text.strip()
+                    stime = block.find("span", attrs={"class":"scheduleTime"}).text.strip()
                 else:
                     day = int(link.parent.parent["class"][0][3:].split(" ")[0])
                     sdate = soup.findAll("span", attrs={"class":"thead-date"})[day].text
                     dateparts = sdate.split(".")
                     month = int(dateparts[0])
                     day = int(dateparts[1])
-                    instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text
-                    stime = block.find("span", attrs={"class":"scheduleTime active"}).text
+                    instr = block.find("span", attrs={"class":"scheduleInstruc active"}).text.strip()
+                    stime = block.find("span", attrs={"class":"scheduleTime active"}).text.strip()
                 # 11:00 AM60min
                 hour = int(stime.split(":")[0])
                 minute = int(stime.split(" ")[0].split(":")[-1])
