@@ -8,21 +8,41 @@ import logging
 import twitter
 from BeautifulSoup import BeautifulSoup as BS
 import datetime
-secrets = open(".secret").read().strip().split(";")
-baseurl, username, password, ckey, csec, akey, asec = secrets
 logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.WARNING)
 
-NDAYS = 1 
+NDAYS = 1
 target_date = datetime.date.today() + datetime.timedelta(days=NDAYS)
 starget_date = target_date.strftime("%a %b") + " " + str(target_date.day)
+
+site = sys.argv[1] if len(sys.argv)>1 else None
+if site=="ridgefield":
+    # Ridgefield
+    siteid=5
+    roomid=10
+    studiodomain="joyrideridgefield.com"
+    secrets = ".secret-ridgefield"
+elif site=="wilton":
+    # Wilton
+    siteid=7
+    roomid=13
+    studiodomain="joyridewilton.com"
+    secrets = ".secret-wilton"
+else:
+    raise Exception("expected site param 'ridgefield' or 'wilton'")
+
+secrets = open(secrets).read().strip().split(";")
+baseurl, username, password, ckey, csec, akey, asec = secrets
 
 r = requests.get("http://www.%s/admin/" % baseurl, allow_redirects=True)
 cookies = r.cookies
 formdata = {'action': 'Sec.doLogin', 'username': username, 'password':password}
 r = requests.post("http://www.%s/admin/index.cfm?action=" % baseurl, data=formdata, cookies=cookies, allow_redirects=False)
-r = requests.get("http://www.%s/admin/index.cfm?action=Booker.view&roomid=10" % baseurl, cookies=cookies)
+# set site cookie and get booker view
+r = requests.get(r"http://www.%s/admin/index.cfm?action=Register.setSite&siteid=%s" % (baseurl, siteid), cookies=cookies, allow_redirects=False)
+#&returnurl=%%2Fadmin%%2Findex%%2Ecfm%%3Faction%%3DBooker%%2Eview&amp;roomid%%3D%s" % (baseurl, siteid, roomid), cookies=r.cookies, allow_redirects=True)
+r = requests.get("http://www.%s/admin/index.cfm?action=Booker.view&roomid=%s" % (baseurl, roomid), cookies=cookies)
 #open("/tmp/autotweet.html","w").write(r.text) 
 soup = BS(r.text)
 lis = soup.findAll("h5", attrs={"class":"nav-header"})
@@ -39,7 +59,7 @@ if not found:
 classes = []
 sublis = li.findNextSibling().findAll("li")
 for subli in sublis: #while sib.text.count("-") >= 2:
-    parts = subli.text.split(" - ")
+    parts = subli.text.split(" - ", 2)
     if len(parts) != 3:
         log.warning("didn't find expected 3 part class description: %s" % subli.text)
         sys.exit(3)
@@ -74,13 +94,13 @@ def format_tweet(dt, classes, inc_url=True):
         out.write(instr)
         if typ.lower() != "cycle":
             out.write(" (%s)" % typ)
-    if inc_url:
+    if inc_url and len(out.getvalue()) <= 118:
+        #t.co links are 22 chars, 118+22 = 140 max
         out.write(" ")
-        out.write("%s/reserve" % baseurl)
+        out.write("%s/reserve" % studiodomain)
   
     return out.getvalue()
 
-# TODO: verify length < 140
 tweet = format_tweet(target_date, classes) 
 print tweet
 
@@ -98,8 +118,8 @@ if "-a" in sys.argv or (raw_input("tweet it? ").lower() == "y"):
         api.PostUpdate(tweet)
     except Exception as e:
         log.exception("failed to post update to Twitter")
-        os.system("""echo "%s" | mail -s "autotweet FAILED" -f "root@joyrd.link" kevin.manley@gmail.com""" % (str(e)+" ("+tweet+")"))
+        os.system("""echo "%s" | mail -s "autotweet FAILED" -r "noreply-root@joyrd.link" kevin.manley@gmail.com""" % (str(e)+" ("+tweet+")"))
     else:
         log.info("successfully posted to Twitter")
-        os.system("""echo "%s" | mail -s "autotweet SUCCESS" -f "root@joyrd.link" kevin.manley@gmail.com""" % tweet)
+        os.system("""echo "%s" | mail -s "autotweet SUCCESS" -r "noreply-root@joyrd.link" kevin.manley@gmail.com""" % tweet)
 
