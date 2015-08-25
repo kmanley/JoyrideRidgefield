@@ -5,6 +5,7 @@ import StringIO
 import requests
 import logging
 import twitter
+import subprocess
 #from BeautifulSoup import BeautifulSoup as BS
 from bs4 import BeautifulSoup as BS
 import datetime
@@ -229,9 +230,11 @@ def processSiteSC(sitename, saveToDB=False):
             curs.execute("insert into occ (dt, site, instr, unavail, total) values (?, ?, ?, ?, ?)", (dt, sitename, instr, unavail, total))
             conn.commit()
         
-
+"""
 def getOccupancySC(site, url):
     r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT)
+    #open(r"/tmp/scwtf.html","w").write(r.text) # TODO:
+    print r.text
     #soup = BS(r.text)
     #avail = len(soup.findAll("div", attrs={"class":["seat", "open"]}))
     #unavail = len(soup.findAll("div", attrs={"class":["seat", "taken"]}))
@@ -240,10 +243,20 @@ def getOccupancySC(site, url):
         unavail = CAPACITY[site]
     else:
         avail = r.text.count("seat open")
-        unavail = r.text.count("seat taken")
+        print "***** avail: ", avail
+        unavail = CAPACITY[site] - avail
     total = avail + unavail
     occ = float(unavail) / total * 100.
+    sys.exit(0)
     return unavail, total, occ
+"""
+def getOccupancySC(site, url):
+	res = subprocess.check_output(["phantomjs", "--ssl-protocol=any", "getscocc.js", "%s%s" % (BASEURL[site],url)])
+	unavail = int(res)
+	avail = CAPACITY[site] - unavail
+	total = avail + unavail
+	occ = float(unavail) / total * 100.
+	return unavail, total, occ
     
 def getBookableLinksSC(sitename, saveToDB=False):
     SCHEDULEURLS = {"scgreenwich":"https://www.soul-cycle.com/find-a-class/studio/212/",
