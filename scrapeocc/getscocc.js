@@ -9,9 +9,15 @@ function onPageReady() {
         return document.documentElement.outerHTML;
     });
 
-    //console.log(htmlContent);
-   var regExp = new RegExp("seat taken", "gi");
-   console.log((htmlContent.match(regExp) || []).length);
+   //console.log(htmlContent);
+   var regExp = new RegExp("the class you requested is full", "gi");
+   var isFull = (htmlContent.match(regExp) || []).length
+   if (isFull > 0) {
+	   console.log(-1)
+   } else {
+	   var regExp = new RegExp("seat taken", "gi");
+       console.log((htmlContent.match(regExp) || []).length);
+   }
 
     phantom.exit();
 }

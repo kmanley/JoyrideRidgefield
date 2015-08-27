@@ -253,6 +253,9 @@ def getOccupancySC(site, url):
 def getOccupancySC(site, url):
 	res = subprocess.check_output(["phantomjs", "--ssl-protocol=any", "getscocc.js", "%s%s" % (BASEURL[site],url)])
 	unavail = int(res)
+	if unavail < 0:
+		# the js script signals sold out by emitting -1 to stdout
+		unavail = CAPACITY[site]
 	avail = CAPACITY[site] - unavail
 	total = avail + unavail
 	occ = float(unavail) / total * 100.
