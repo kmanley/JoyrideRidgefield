@@ -3,9 +3,10 @@ import sys
 import sqlite3
 import csv
 
-def main(csvfile):
+def main(csvfile, site):
+	assert site in csvfile # sanity check
 	#print csvfile
-	conn = sqlite3.connect("joyridge.dat")
+	conn = sqlite3.connect("joyride-%s.dat" % site)
 	curs = conn.cursor()
 	curs.execute("delete from openseries")
     # 0x0d line terminators - I told you zingfit sucks! 
@@ -40,7 +41,7 @@ def main(csvfile):
 	print "loaded %d open series" % i
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print "usage: import_series.py <csvfile>"
+    if len(sys.argv) != 3:
+        print "usage: import_series.py <csvfile> <site>"
         sys.exit(1)
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

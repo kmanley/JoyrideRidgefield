@@ -1,3 +1,4 @@
+import sys
 import cStringIO as StringIO
 from envelopes import Envelope, GMailSMTP
 import getpass
@@ -12,7 +13,18 @@ dryRun = False
 secrets = open(".mailreport-secret").read().strip().split(";")
 TODAY = datetime.date.today()
 
-conn = sqlite3.connect("joyridge.dat")
+if len(sys.argv) < 2:
+	print "usage: mail_report <site>"
+	sys.exit(1)
+site = sys.argv[1] 
+if site not in ("ridgefield", "wilton"):
+	print "invalid site %s" % site
+	sys.exit(2)	
+conn = sqlite3.connect("joyride-%s.dat" % sys.argv[1])
+if site=="ridgefield":
+	recips = ["kevin.manley@gmail.com"]
+elif site=="wilton":
+	recips = ["kevin.manley@gmail.com"]
 
 def get_firsttimers(offset=""):
     io = StringIO.StringIO()
@@ -157,8 +169,7 @@ def get_birthdayriders():
 		io.write("None")
     return io.getvalue()
 
-def send_report(report, subj, recips=None): 
-	recips = recips or ['frontdesk@joyrideridgefield.com', 'info@joyrideridgefield.com']
+def send_report(report, subj): 
 	envelope = Envelope(
 	    from_addr=(u'joyride.robot@gmail.com', u'JoyRide Robot'),
 	    to_addr=recips,
@@ -227,4 +238,4 @@ def rider_report():
 		send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
 
 if __name__ == "__main__":
-    rider_report()
+	rider_report()

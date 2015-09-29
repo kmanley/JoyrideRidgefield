@@ -3,11 +3,27 @@ import sys
 import sqlite3
 import csv
 
-def main(csvfile):
+def main(csvfile, site):
+	assert site in csvfile # sanity check
 	#print csvfile
-	conn = sqlite3.connect("joyridge.dat")
+	
+	mindate = "9999-99-99 99:99:99.9"
+	maxdate = "0000-00-00 00:00:00.0"
+	lines = [x.strip() for x in open(csvfile, "rb").read().split("\r")]
+	for i, line in enumerate(lines):
+		if i==0:
+			continue # skip header
+		dt = line[:21]
+		if dt < mindate:
+			mindate = dt
+		if dt > maxdate:
+			maxdate = dt
+		
+	print "importing sales from %s to %s" % (mindate, maxdate)
+	
+	conn = sqlite3.connect("joyride-%s.dat" % site)
 	curs = conn.cursor()
-	curs.execute("delete from sale")
+	curs.execute("delete from sale where dt>='%s' and dt<='%s';" % (mindate, maxdate))
     # 0x0d line terminators - I told you zingfit sucks! 
 	lines = [x.strip() for x in open(csvfile, "rb").read().split("\r")]
 	#with open(csvfile, "ru") as fp:
@@ -40,7 +56,7 @@ def main(csvfile):
 	print "loaded %d sales" % i
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print "usage: import_sales.py <csvfile>"
+    if len(sys.argv) != 3:
+        print "usage: import_sales.py <csvfile> <site>"
         sys.exit(1)
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

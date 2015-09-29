@@ -868,10 +868,42 @@ and
 (select count(*) from attend a2 where a2.custid=c.id and a2.status='Enrolled' and 
   a2.classdate >= date('2015-05-01')) < 1;
 
+/* ktm 28 sep 15
+
+-- find people who have ridden at wilton but never bought anything, and who don't have a future
+-- class already scheduled; 
+-- problem, this lists people who share series of someone else, because in that case this person might not have made
+-- any sales but their spouse did. 
+
+select id, firstname, lastname from cust 
+-- has signed up for a class (note: includes those who were no-shows)
+where exists(select * from attend where custid=cust.id) 
+-- no non-comped sales
+and (select coalesce(sum(total),0) from sale where custid=cust.id)=0 
+-- no future scheduled attendance
+and  not exists (select * from attend where custid=cust.id and classdate>='2015-09-28')  
+order by lastname, firstname;
 
 
+*/
 
 
      
+/* customers who had their first ride free between dates A and B but never came
+   back after C - this is just a variant of the lapsed query above */
+select c.emailaddress from cust c 
+--select count(*) from cust c
+where 
+-- customer came 1 time between A and B
+(select count(*) from attend a where a.custid=c.id and a.status='Enrolled' and 
+   a.classdate between date('2015-07-01') and date('2015-08-31')) > 0 
+and 
+-- but customer hasn't come back since C
+(select count(*) from attend a2 where a2.custid=c.id and a2.status='Enrolled' and 
+  a2.classdate >= date('2015-09-01')) < 1
+and
+-- and has no open series
+not exists (select * from openseries o where o.emailaddress=c.emailaddress)
+;
 
 
