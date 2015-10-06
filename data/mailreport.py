@@ -235,7 +235,7 @@ def rider_report():
 		with open("/tmp/test.html","wb") as fp:
 			fp.write(io.getvalue())    
 	else:
-		send_report(io.getvalue(), 'Rider report for %s' % str(TODAY))
+		send_report(io.getvalue(), '%s Rider report for %s' % (site.title(), str(TODAY)))
 
 if __name__ == "__main__":
 	rider_report()

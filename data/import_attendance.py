@@ -2,11 +2,20 @@
 import sys
 import sqlite3
 import csv
+import logging
+logging.basicConfig()
+log = logging.getLogger()
+log.setLevel(logging.INFO)
 
+# NOTE: this only works when the incremental attendance csv files are constantly moving
+# forward in time; if you import a file where end date is earlier than the end date in 
+# the db, the num/totnum values will get screwed up. You can always repair by re-importing
+# files in forward order
 def main(csvfile, site):
 	assert site in csvfile # sanity check
 	#print csvfile
 	
+	log.info("deleting old attendance rows...")
 	conn = sqlite3.connect("joyride-%s.dat" % site)
 	curs = conn.cursor()
 	curs.execute("begin transaction;")
@@ -22,7 +31,7 @@ def main(csvfile, site):
 		try:
 			ident = long(line.split(",")[0][1:-1])
 		except Exception:
-			print "bad line %d: %s" % (i, repr(line))
+			log.exception("bad line %d: %s" % (i, repr(line)))
 			sys.exit(1)
 		#if ident < lastident:
 		#	raise Exception("file is not sorted!")
@@ -59,7 +68,7 @@ def main(csvfile, site):
 					j = k+1
 		cols.append(line[j:k+1])
 		if len(cols) != 15:
-			print repr(cols), "has %d cols (line %d)" % (len(cols), i)
+			log.error(repr(cols), "has %d cols (line %d)" % (len(cols), i))
 			return
 			sys.exit(2)
 		cols = [unicode(col[1:-1] if col.startswith('"') else col, encoding="latin-1") for col in cols]
@@ -96,6 +105,7 @@ def main(csvfile, site):
 	#print totenrolled
 	#sys.exit(0)
 		
+	log.info("inserting new attendance rows...")
 	for i, row in enumerate(rows):
 		custid = int(row[idx_custid])
 		status = row[idx_status]
@@ -107,11 +117,11 @@ def main(csvfile, site):
 			
 		#print cols
 		if i>0 and i % 1000 == 0:
-			print "%d rows..." % i
+			log.info("%d rows..." % i)
 		curs.execute("insert into attend values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 	             tuple(row)+(enrolled[custid],totenrolled))
 	conn.commit()
-	print "loaded %d attendance rows" % i
+	log.info("loaded %d attendance rows" % i)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

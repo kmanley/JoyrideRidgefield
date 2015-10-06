@@ -2,6 +2,10 @@
 import sys
 import sqlite3
 import csv
+import logging
+logging.basicConfig()
+log = logging.getLogger()
+log.setLevel(logging.INFO)
 
 def main(csvfile, site):
 	assert site in csvfile # sanity check
@@ -30,7 +34,7 @@ def main(csvfile, site):
 					j = k+1
 		cols.append(line[j:k+1])
 		if len(cols) != 12:
-			print repr(cols), "has %d cols" % len(cols)
+			log.error(repr(cols), "has %d cols" % len(cols))
 			return
 			sys.exit(2)
 		cols = [unicode(col[1:-1] if col.startswith('"') else col, encoding="latin-1") for col in cols]
@@ -38,7 +42,7 @@ def main(csvfile, site):
 		curs.execute("insert into openseries (emailaddress,firstname,lastname,series,cost,count,remaining,purchdt,expiredt,comped,lastclass,prefloc) values (?,?,?,?,?,?,?,?,?,?,?,?)",
 	             tuple(cols))
 	conn.commit()
-	print "loaded %d open series" % i
+	log.info( "loaded %d open series" % i)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

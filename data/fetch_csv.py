@@ -10,7 +10,8 @@ import datetime
 
 logging.basicConfig()
 log = logging.getLogger()
-log.setLevel(logging.WARNING)
+log.setLevel(logging.INFO)
+logging.getLogger("urllib3").setLevel(logging.WARN)
 
 TODAY = datetime.date.today()
 TODAYPLUS10 = TODAY + datetime.timedelta(days=10)
@@ -39,16 +40,18 @@ def login(site):
 	return cookies
 	
 def getCustomers(cookies):
+	log.info("fetching customers")
 	r = requests.get("http://www.joyridestudio.com/admin/index.cfm?action=Report.exportEmails", headers=USERAGENT, cookies=cookies)
 	return r.text.encode("utf-8")
 	
 def saveCustomers(cookies, site):
-	print "saving customers"
+	log.info("saving customers")
 	with open("customers-%s.csv" % site, "wb") as fp:
 		fp.write(getCustomers(cookies))
 		
 def getSales(cookies):
 	r = requests.get("http://www.joyridestudio.com/admin/index.cfm?action=Report.allSalesByDate", headers=USERAGENT, cookies=cookies)
+	log.info("fetching sales from %s to %s" % (TODAYMINUS7, TODAY))
 	url = "http://www.joyridestudio.com/admin/index.cfm?action=Report.allSalesByDate&start=%s/%s/%s&end=%s/%s/%s&go=GO" % \
 			(TODAYMINUS7.month, TODAYMINUS7.day, TODAYMINUS7.year-2000, TODAY.month, TODAY.day, TODAY.year-2000)
 	r = requests.get(url, headers=USERAGENT, cookies=cookies)
@@ -57,7 +60,7 @@ def getSales(cookies):
 	return r.text.encode("utf-8")	
 	
 def saveSales(cookies, site):
-	print "saving sales"
+	log.info("saving sales")
 	with open("sales-%s.csv" % site, "wb") as fp:
 		fp.write(getSales(cookies))
 
@@ -65,6 +68,7 @@ def getAttendance(cookies):
 	#print requests.utils.dict_from_cookiejar(cookies)	
 	r = requests.get("http://www.joyridestudio.com/admin/index.cfm?action=Report.attendanceExport", headers=USERAGENT, cookies=cookies)
 	#print requests.utils.dict_from_cookiejar(r.cookies)	
+	log.info("fetching attendance from %s to %s" % (TODAYMINUS7, TODAYPLUS10))
 	url = "http://www.joyridestudio.com/admin/index.cfm?action=Report.attendanceExport&roomid=1&start=%s/%s/%s&end=%s/%s/%s&go=GO" %  \
 		(TODAYMINUS7.month, TODAYMINUS7.day, TODAYMINUS7.year-2000, TODAYPLUS10.month, TODAYPLUS10.day, TODAYPLUS10.year-2000)
 	r = requests.get(url, headers=USERAGENT, cookies=cookies)
@@ -75,16 +79,17 @@ def getAttendance(cookies):
 	return r.text.encode("utf-8")	
 		
 def saveAttendance(cookies, site):
-	print "saving attendance"
+	log.info("saving attendance")
 	with open("attendance-%s.csv" % site, "wb") as fp:
 		fp.write(getAttendance(cookies))
 
 def getSeries(cookies):
+	log.info("fetching open series")
 	r = requests.get("http://www.joyridestudio.com/admin/index.cfm?action=Report.exportAllOpenSeries", headers=USERAGENT, cookies=cookies)
 	return r.text.encode("utf-8")
 	
 def saveSeries(cookies, site):
-	print "saving open series"
+	log.info("saving open series")
 	with open("openseries-%s.csv" % site, "wb") as fp:
 		fp.write(getSeries(cookies))
 	
@@ -94,7 +99,7 @@ def main(site):
 	saveSales(cookies, site)
 	saveAttendance(cookies, site)
 	saveSeries(cookies, site)
-	print "done"
+	log.info("done")
 	
 if __name__ == "__main__":
 	main()
