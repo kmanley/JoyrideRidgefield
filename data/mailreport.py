@@ -26,15 +26,20 @@ if site=="ridgefield":
 elif site=="wilton":
 	recips = ["kevin.manley@gmail.com"]
 
+def namelink(firstname, lastname, cid):
+	firstname = firstname.encode("ascii", "replace")
+	lastname = lastname.encode("ascii", "replace")
+	return "<a href='%s'>%s %s</a>" % ("http://www.joyridestudio.com/admin/index.cfm?action=Customer.attendance&customerid=%s"%cid, firstname, lastname)
+
 def get_firsttimers(offset=""):
     io = StringIO.StringIO()
     rows = conn.cursor().execute("select c.id, c.firstname, c.lastname, c.emailaddress, c.phone, c.phone2, a.classdate from attend a join cust c on a.custid=c.id  where a.num=1 and date(a.classdate)=date('now', 'localtime', '%s') order by classdate;" % offset).fetchall()
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>First class</th></tr>")
     for i, row in enumerate(rows):
-		_, firstname, lastname, email, phone1, _, classdate = row
+		cid, firstname, lastname, email, phone1, _, classdate = row
 		classdate = classdate[:16]
-		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, classdate)).encode('utf-8', 'replace'))
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (namelink(firstname, lastname, cid), email, phone1, classdate)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -44,8 +49,9 @@ def get_toprecent(limit):
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th># Rides</th></tr>")
     for i, row in enumerate(rows):
-		_, firstname, lastname, email, phone1, _, cnt, frm, to = row
-		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, cnt)).encode('utf-8', 'replace'))
+		cid, firstname, lastname, email, phone1, _, cnt, frm, to = row
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  \
+			(namelink(firstname, lastname, cid), email, phone1, cnt)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -55,8 +61,9 @@ def get_trending(direction, limit):
     io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
     io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>T-60 to T-30</th><th>T-30 to T-0</th></tr>")
     for i, row in enumerate(rows):
-		_, firstname, lastname, email, phone1, _, prev, last = row
-		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, last)).encode('utf-8', 'replace'))
+		cid, firstname, lastname, email, phone1, _, prev, last = row
+		io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  \
+			(namelink(firstname, lastname, cid), email, phone1, prev, last)).encode('utf-8', 'replace'))
     io.write("</table>")
     return io.getvalue()
 
@@ -67,8 +74,9 @@ def get_lapsed():
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>T-60 to T-30</th><th>T-30 to T-0</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, prev = row
-			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, prev, 0)).encode('utf-8', 'replace'))
+			cid, firstname, lastname, email, phone1, _, prev = row
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  \
+				(namelink(firstname, lastname, cid), email, phone1, prev, 0)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -85,9 +93,10 @@ def get_stalled():
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Account Created</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, dt = row
+			cid, firstname, lastname, email, phone1, _, dt = row
 			dt = dt[:16]
-			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname.encode("ascii", "replace") + " " + lastname, email, phone1, dt)).encode('utf-8', 'replace'))
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % \
+			 (namelink(firstname, lastname, cid), email, phone1, dt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -100,12 +109,14 @@ def get_wallofjoy():
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Class date</th><th>Count</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, asof, cnt = row
+			cid, firstname, lastname, email, phone1, _, asof, cnt = row
 			asof = asof[:16]
 			if cnt % 100 == 0:
-				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt)).encode('utf-8', 'replace'))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td></tr>" %  \
+					(namelink(firstname, lastname, cid), email, phone1, asof, cnt)).encode('utf-8', 'replace'))
 			else:
-				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, cnt)).encode('utf-8', 'replace'))
+				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td></tr>" % \
+				 (namelink(firstname, lastname, cid), email, phone1, asof, cnt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -118,12 +129,14 @@ def get_studiomilestones():
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Class date</th><th>Rider Count</th><th>Studio Count</th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, phone1, _, asof, ridercnt, studiocnt = row
+			cid, firstname, lastname, email, phone1, _, asof, ridercnt, studiocnt = row
 			asof = asof[:16]
 			if studiocnt % 10000 == 0:
-				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td><td align='right'><b>%d</b></td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td align='right'><b>%d</b></td><td align='right'><b>%d</b></td></tr>" % \
+				 (namelink(firstname, lastname, cid), email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
 			else:
-				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" %  (firstname + " " + lastname, email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
+				io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td align='right'>%d</td></tr>" % \
+				  (namelink(firstname, lastname,cid), email, phone1, asof, ridercnt, studiocnt)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -136,14 +149,15 @@ def get_crazies():
 		io.write("<table border='1' cellpadding='1' cellspacing='1' bordercolor='#aaaaaa'>")
 		io.write("<tr><th>Name</th><th>Email</th><th>First</th><th>Last</th><th>Count</th><th></th></tr>")
 		for i, row in enumerate(rows):
-			_, firstname, lastname, email, firstclass, lastclass, cnt = row
+			cid, firstname, lastname, email, firstclass, lastclass, cnt = row
 			firstclass = firstclass[:16]
 			lastclass = lastclass[:16]
 			if firstclass == lastclass:
 				msg = "NOTE: %d spots in 1 class!" % cnt
 			else:
 				msg = ""
-			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, firstclass, lastclass, cnt, msg)).encode('utf-8', 'replace'))
+			io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td align='right'>%d</td><td>%s</td></tr>" % \
+			   (namelink(firstname, lastname, cid), email, firstclass, lastclass, cnt, msg)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
@@ -157,13 +171,15 @@ def get_birthdayriders():
 		io.write("<tr><th>Name</th><th>Email</th><th>Phone</th><th>Birthday</th><th>Riding on</th></tr>")
 		for i, row in enumerate(rows):
 			#birthdate is actual historical day, birthday is that day this year
-			_, firstname, lastname, email, phone1, _, birthdate, birthday, classday, _ = row
+			cid, firstname, lastname, email, phone1, _, birthdate, birthday, classday, _ = row
 			birthdate = birthdate[:10]
 			classday = classday[:16]
 			if birthday[:10] == classday[:10]:
-				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
+				io.write(("<tr><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td><td><b>%s</b></td></tr>" % \
+				 (namelink(firstname, lastname, cid), email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
 			else:
-			    io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  (firstname + " " + lastname, email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
+			    io.write(("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" %  \
+			      (namelink(firstname, lastname, cid), email, phone1, birthdate, classday)).encode('utf-8', 'replace'))
 		io.write("</table>")
     else:
 		io.write("None")
