@@ -17,7 +17,6 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-RECIPS = ['kevin.manley@gmail.com']
 #, 'amylunapal@gmail.com'] # TODO: ['frontdesk..., info']
 dryRun = False
 secrets = open(".mailreport-secret").read().strip().split(";")
@@ -32,6 +31,11 @@ if len(sys.argv) < 2:
 	sys.exit(1)
 site = sys.argv[1]
 conn = sqlite3.connect("joyride-%s.dat" % site)
+if site=="ridgefield":
+	RECIPS = ["kevin.manley@gmail.com"]
+elif site=="wilton":
+	RECIPS = ["kevin.manley@gmail.com"]
+
 
 def get_sales_30_day():
     io = StringIO.StringIO()

@@ -1,4 +1,3 @@
-# Quick and dirty script to auto-tweet 
 import os
 import sys
 import StringIO
