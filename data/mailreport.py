@@ -22,9 +22,11 @@ if site not in ("ridgefield", "wilton"):
 	sys.exit(2)	
 conn = sqlite3.connect("joyride-%s.dat" % sys.argv[1])
 if site=="ridgefield":
-	recips = ["kevin.manley@gmail.com"]
+	#recips = ["kevin.manley@gmail.com"]
+	recips = ["kevin@joyrideridgefield.com", "amy@joyrideridgefield.com"]
 elif site=="wilton":
-	recips = ["kevin.manley@gmail.com"]
+	#recips = ["kevin.manley@gmail.com"]
+	recips = ["kevin@joyridewilton.com", "amy@joyridewilton.com", "flo@joyridewilton.com", "info@joyridewilton.com"]
 
 def namelink(firstname, lastname, cid):
 	firstname = firstname.encode("ascii", "replace")

@@ -31,11 +31,13 @@ if len(sys.argv) < 2:
 	sys.exit(1)
 site = sys.argv[1]
 conn = sqlite3.connect("joyride-%s.dat" % site)
-if site=="ridgefield":
-	RECIPS = ["kevin.manley@gmail.com"]
-elif site=="wilton":
-	RECIPS = ["kevin.manley@gmail.com"]
 
+if site=="ridgefield":
+	#RECIPS = ["kevin.manley@gmail.com"]
+	RECIPS = ["kevin@joyrideridgefield.com", "amy@joyrideridgefield.com"]
+elif site=="wilton":
+	#RECIPS = ["kevin.manley@gmail.com"]
+	RECIPS = ["kevin@joyridewilton.com", "amy@joyridewilton.com"]
 
 def get_sales_30_day():
     io = StringIO.StringIO()
