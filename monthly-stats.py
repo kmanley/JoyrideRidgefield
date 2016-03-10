@@ -12,6 +12,7 @@ pastmonthlies = {}
 currmonthlies = {}
 today = datetime.date.today()
 totexpected = 0.0
+totguaranteed = 0.0
 monthlyprice = 199.99
 
 with open('/home/kevin/Downloads/jrr-monthlies.csv', 'rb') as csvfile:
@@ -39,6 +40,11 @@ print "avg tenure of current members: %.2f months" % avgtenurecurr
 for name in currmonthlies.keys():
     count = allmonthlies[name]
     print "%s has %s months" % (name, count)
+    if count < 3:
+        guaranteed = (3-count) * monthlyprice
+        totguaranteed += guaranteed
+        print "   only %d month(s) in, will get %.2f guaranteed" % (count, guaranteed)
+        
     if count < avgtenurepast:
         expected = (avgtenurepast - count) * monthlyprice
         totexpected += expected
@@ -52,5 +58,5 @@ for name in currmonthlies.keys():
         print "  assume will exceed avg; expect %.2f more revenue from %s" % (expected, name)
         totexpected += expected
         
-        
+print "total guaranteed future revenue: %.2f" % totguaranteed        
 print "total expected future revenue: %.2f" % totexpected
