@@ -274,8 +274,16 @@ def getBookableLinksSC(sitename, saveToDB=False):
     now = datetime.datetime.now()
     blocks = soup.findAll("div", attrs={"class":["session", "open"]})
     for block in blocks:   
-        #print block
-        dt = datetime.datetime.strptime(block.parent.parent["data-date"], "%B %d, %Y")
+        #print block.parent.parent
+        day = int(block.parent.parent["data-date"])
+        #print "***", day
+        if day >= TODAY.day:
+            dt = datetime.date(TODAY.year, TODAY.month, day)
+        else:
+            dt = datetime.date(TODAY.year if TODAY.month < 12 else TODAY.year+1, (TODAY.month+1)%12, day)
+        
+        #dt = datetime.datetime.strptime(sdt, "%B %d, %Y")
+        
         #print "***", dt
         stm = block.find("span", attrs={"class":"time"}).text
         #print "***", stm
