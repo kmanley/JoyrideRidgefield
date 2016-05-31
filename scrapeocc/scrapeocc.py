@@ -14,13 +14,18 @@ username, password = secrets
 logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.WARNING)
+#logging.getLogger().setLevel(logging.DEBUG)
+#requests_log = logging.getLogger("requests.packages.urllib3")
+#requests_log.setLevel(logging.DEBUG)
+#requests_log.propagate = True
 
 conn = sqlite3.connect("occupancy.db")
 
-SITENAMES = ["wilton", "westport", "westport2", "darien", "darien2", "ridgefield", "texas-bdwy", "texas-alon", "texas-alon2",
+SITENAMES = ["wilton", "wilton2", "westport", "westport2", "darien", "darien2", "ridgefield", "texas-bdwy", "texas-alon", "texas-alon2",
              "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scgreenwich", "scwestport"]
 
-BASEURL = {"wilton" : "http://www.joyridestudio.com",
+BASEURL = { "wilton" : "http://www.joyridestudio.com",
+           "wilton2" : "http://www.joyridestudio.com",
           "westport" : "http://www.joyridestudio.com",
            "westport2" : "http://www.joyridestudio.com",
            "darien" : "http://www.joyridestudio.com",
@@ -38,7 +43,7 @@ BASEURL = {"wilton" : "http://www.joyridestudio.com",
            "scwestport" : "http://www.soul-cycle.com",
    }
 
-USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"}
+USERAGENT = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.63 Safari/537.36"}
 
 LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "westport2"  :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
@@ -46,6 +51,7 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
             "darien2"    :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
             "ridgefield":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
             "wilton":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
+            "wilton2":  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
             "texas-bdwy"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",
 	    "texas-alon"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login", 
             "texas-alon2"     :  "http://www.joyridestudio.com/reserve/index.cfm?action=Account.login",  
@@ -62,6 +68,7 @@ LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action
             "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
             "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "wilton2": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
             "texas-bdwy"     : "http://www.joyridestudio.com/reserve/index.cfm?action=",
             "texas-alon"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", 
             "texas-alon2"     : "http://www.joyridestudio.com/reserve/index.cfm?action=",  
@@ -77,7 +84,8 @@ CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?actio
                "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
                "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
                "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
-               "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7",
+               "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=13",
+               "wilton2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=18",
                "texas-bdwy":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
                "texas-alon":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=15",
                "texas-alon2":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=16",
@@ -91,6 +99,7 @@ CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?actio
 CAPACITY = {"westport":46, 
             "westport2":20,
             "wilton":36,
+            "wilton2":10,
             "darien":40, 
             "darien2":20,
             "ridgefield":44,
@@ -251,6 +260,7 @@ def getOccupancySC(site, url):
     return unavail, total, occ
 """
 def getOccupancySC(site, url):
+        print "getOccupancySC: %s%s" % (BASEURL[site],url)
 	res = subprocess.check_output(["phantomjs", "--ssl-protocol=any", "getscocc.js", "%s%s" % (BASEURL[site],url)])
 	unavail = int(res)
 	if unavail < 0:
@@ -265,7 +275,9 @@ def getBookableLinksSC(sitename, saveToDB=False):
     SCHEDULEURLS = {"scgreenwich":"https://www.soul-cycle.com/find-a-class/studio/212/",
                     "scwestport":"https://www.soul-cycle.com/find-a-class/studio/1026/"}
     url = SCHEDULEURLS[sitename]
-    r = requests.get(url, headers=USERAGENT)
+    print "get %s" % url
+    r = requests.get(url, headers=USERAGENT, timeout=10)
+    print "got here"
     #open(r"/tmp/sc.html", "w").write(r.text.encode("utf-8"))
     #print r.text
     #print "got here"
