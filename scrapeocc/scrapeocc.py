@@ -21,8 +21,23 @@ log.setLevel(logging.WARNING)
 
 conn = sqlite3.connect("occupancy.db")
 
-SITENAMES = ["wilton", "wilton2", "westport", "westport2", "darien", "darien2", "ridgefield", "texas-bdwy", "texas-alon", "texas-alon2",
-             "studio22", "shiftg", "shiftnh", "zenride", "tribe", "scgreenwich", "scwestport"]
+SITENAMES = [
+	"wilton", 
+	"wilton2", 
+	"westport", 
+	"westport2", 
+	"darien", 
+	"darien2", 
+	"ridgefield", 
+	"texas-bdwy", 
+	"texas-alon", 
+	"texas-alon2",
+        #"studio22", 
+	#"shiftg", 
+	#"shiftnh", 
+	#"zenride", 
+	#"tribe"
+	] #, "scgreenwich", "scwestport"]
 
 BASEURL = { "wilton" : "http://www.joyridestudio.com",
            "wilton2" : "http://www.joyridestudio.com",
@@ -62,39 +77,57 @@ LOGINGET = {"westport"  :  "http://www.joyridestudio.com/reserve/index.cfm?actio
             "tribe" : "http://www.unitethetribe.com/reserve/index.cfm?action=Account.login", 
             }
 
-LOGINPOST = {"westport" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "westport2" : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "darien"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "darien2"    : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "ridgefield": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
-            "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
-            "wilton2": "http://www.joyridestudio.com/reserve/index.cfm?action=", 
-            "texas-bdwy"     : "http://www.joyridestudio.com/reserve/index.cfm?action=",
-            "texas-alon"     : "http://www.joyridestudio.com/reserve/index.cfm?action=", 
-            "texas-alon2"     : "http://www.joyridestudio.com/reserve/index.cfm?action=",  
-            "studio22"  : "http://www.studio22fitness.com/reserve/index.cfm?action=", 
-            "shiftg"    : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
-            "shiftnh"   : "http://www.shiftcycling.com/reserve/index.cfm?action=", 
-            "zenride"   : "http://www.zen-ride.com/reserve/index.cfm?action=", 
-            "tribe"     : "http://www.unitethetribe.com/reserve/index.cfm?action=", 
+LOGINPOST = {"westport" : "https://www.joyridestudio.com/reserve/index.cfm?action=",
+            "westport2" : "https://www.joyridestudio.com/reserve/index.cfm?action=",
+            "darien"    : "https://www.joyridestudio.com/reserve/index.cfm?action=",
+            "darien2"    : "https://www.joyridestudio.com/reserve/index.cfm?action=",
+            "ridgefield": "https://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "wilton": "https://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "wilton2": "https://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "texas-bdwy"     : "https://www.joyridestudio.com/reserve/index.cfm?action=",
+            "texas-alon"     : "https://www.joyridestudio.com/reserve/index.cfm?action=", 
+            "texas-alon2"     : "https://www.joyridestudio.com/reserve/index.cfm?action=",  
+            "studio22"  : "https://www.studio22fitness.com/reserve/index.cfm?action=", 
+            "shiftg"    : "https://www.shiftcycling.com/reserve/index.cfm?action=", 
+            "shiftnh"   : "https://www.shiftcycling.com/reserve/index.cfm?action=", 
+            "zenride"   : "https://www.zen-ride.com/reserve/index.cfm?action=", 
+            "tribe"     : "https://www.unitethetribe.com/reserve/index.cfm?action=", 
             }
 
-CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1", 
-               "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=3", 
-               "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=5",
-               "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=6",
-               "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5&roomid=10",
-               "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=13",
-               "wilton2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=18",
-               "texas-bdwy":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6&roomid=12",
-               "texas-alon":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=15",
-               "texas-alon2":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=16",
+CALENDARGET = {"westport": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=20800000001", 
+               "westport2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=20800000003", 
+               "darien":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=20800000005",
+               "darien2":    "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=3&n=Darien&roomid=20800000006",
+               "ridgefield":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=5",
+               "wilton": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=20800000013",
+               "wilton2": "http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=7&roomid=20800000018",
+               "texas-bdwy":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=6",
+               "texas-alon":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=20800000015",
+               "texas-alon2":"http://www.joyridestudio.com/reserve/index.cfm?action=Reserve.chooseClass&site=8&roomid=20800000016",
                "studio22":"http://www.studio22fitness.com/reserve/index.cfm?action=Reserve.chooseClass&site=1&roomid=1",
                "shiftg": "http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                "shiftnh":"http://www.shiftcycling.com/reserve/index.cfm?action=Reserve.chooseClass&site=2",
                "zenride":"http://www.zen-ride.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                "tribe" : "http://www.unitethetribe.com/reserve/index.cfm?action=Reserve.chooseClass&site=1",
                } 
+
+SPOTGETPREFIX = {"westport": "http://www.joyridestudio.com/reserve/",
+               "westport2": "http://www.joyridestudio.com/reserve/",
+               "darien":    "http://www.joyridestudio.com/reserve/",
+               "darien2":    "http://www.joyridestudio.com/reserve/",
+               "ridgefield":"http://www.joyridestudio.com/reserve/",
+               "wilton": "http://www.joyridestudio.com/reserve/",
+               "wilton2": "http://www.joyridestudio.com/reserve/",
+               "texas-bdwy":"http://www.joyridestudio.com/reserve/",
+               "texas-alon":"http://www.joyridestudio.com/reserve/",
+               "texas-alon2":"http://www.joyridestudio.com/reserve/",
+               "studio22":"http://www.studio22fitness.com/reserve/",
+               "shiftg": "http://www.shiftcycling.com/reserve/",
+               "shiftnh":"http://www.shiftcycling.com/reserve/",
+               "zenride":"http://www.zen-ride.com/reserve/",
+               "tribe" : "http://www.unitethetribe.com/reserve/",
+               }
+
 
 CAPACITY = {"westport":46, 
             "westport2":20,
@@ -172,7 +205,8 @@ def getBookableLinksZingfit(site, cookies):
             pass #not bookable - class is in past or cancelled
 
 def getOccupancyZingfit(site, url, cookies):
-    r = requests.get("%s%s" % (BASEURL[site], url), headers=USERAGENT, cookies=cookies)
+    r = requests.get(url, headers=USERAGENT, cookies=cookies)
+    #print r.text
     soup = BS(r.text)
     block = soup.find("div", attrs={"id":"spotwrapper"})
     avail = 0
@@ -198,6 +232,7 @@ def loginGetCookies(sitename):
     cookies = r.cookies
     formdata = {'action': 'Account.doLogin', 'username': username, 'password':password}
     r = requests.post(LOGINPOST[sitename], data=formdata, headers=USERAGENT, cookies=cookies, allow_redirects=False)
+    #print "cookies: " + str(cookies)
     return cookies
 
 def processSiteZingfit(sitename, saveToDB=False):
@@ -205,7 +240,9 @@ def processSiteZingfit(sitename, saveToDB=False):
     cookies = loginGetCookies(sitename)
     for item in getBookableLinksZingfit(sitename, cookies):
         #print "item",  item # TODO:
-        dt, instr, soldout, url = item
+        dt, instr, soldout, suffix = item
+        url = SPOTGETPREFIX[sitename] + suffix
+        #print "url = " + url
         if dt.date() > TOMORROW:
             #print "breaking because %s > %s" % (dt.date(), TOMORROW)
             break   
